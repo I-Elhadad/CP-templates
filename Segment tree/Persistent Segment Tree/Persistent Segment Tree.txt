@@ -1,0 +1,54 @@
+
+extern struct Node *const Empty;
+const int N = 4e5 + 5;
+
+struct Node {
+    Node *left;
+    Node *right;
+    int val;
+
+    Node() {
+        left = this;
+        right = this;
+        val = 0;
+    }
+
+    Node(int v, Node *left = Empty, Node *right = Empty) {
+        val = v;
+        this->left = left;
+        this->right = right;
+    }
+};
+
+mt19937 random_seed(time(0));
+
+long long rnd(long long l, long long r) {
+    if (l > r) throw invalid_argument("parameters is invalid");
+    uniform_int_distribution<long long> dist(l, r);
+    return dist(random_seed);
+}
+
+Node *insert(Node *cur, int pos,int hash, int st = 1, int en = 2e9 + 1) {
+    if (pos < st || pos > en)return cur;
+    if (st == en) {
+        return new Node(((hash) ^ (cur->val)));
+    }
+    int mid = st + (en - st) / 2;
+    Node *l = insert(cur->left, pos, hash, st, mid);
+    Node *r = insert(cur->right, pos, hash, mid + 1, en);
+    return new Node(((l->val) ^ (r->val)), l, r);
+}
+
+int query(Node *pre, Node *cur,int st = 1, int en = 2e9 + 1) {
+    int mid = st + (en - st) / 2;
+    if (st == en) {
+        return st;
+    }
+    int h = (cur->left->val) ^ (pre->left->val);
+    if (h)
+        return query(pre->left, cur->left, st, mid);
+    return query(pre->right, cur->right, mid + 1, en);
+}
+
+Node *const Empty = new Node();
+vector<Node *> roots(N);

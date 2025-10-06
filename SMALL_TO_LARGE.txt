@@ -1,0 +1,40 @@
+int n;
+    cin >> n;
+    vector<ll> v(n);
+    for (int i = 0; i < n; i++)
+        cin >> v[i];
+    vector<ll> edges[n];
+    for (int i = 0; i < n - 1; i++) {
+        ll x, y;
+        cin >> x >> y;
+        x--, y--;
+        edges[x].push_back(y);
+        edges[y].push_back(x);
+    }
+    map<ll,ll>freq[n];
+    vector<ll>ans(n);
+    function<void(ll, ll)> dfs = [&](ll node, ll parent) {
+        // update the enter node
+        freq[node][v[node]]++;
+        for (auto it: edges[node]) {
+            if (it != parent) {
+                dfs(it, node);
+            }
+        }
+        for (auto it: edges[node]) {
+            if(it==parent)continue;
+            // swap if(it.size<node.size)
+            if(freq[it].size()>freq[node].size())
+                swap(freq[it],freq[node]);
+            // update current node subtree
+            for(auto it1:freq[it])
+            {
+                if(it1.second==0)continue;
+            }
+        }
+        // update the answer
+        //ans[node]=sum[node];
+    };
+    dfs(0, -1);
+    for (auto it: ans)
+        cout << it << " ";

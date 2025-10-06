@@ -1,0 +1,128 @@
+struct Line {
+    ll m;
+    ll b;
+    long double xLeft; // first x where this line is optimal
+    Line() {
+    }
+
+    Line(ll _m, ll _b, long double _x = NEG_INF) : m(_m), b(_b), xLeft(_x) {
+    }
+};
+
+static bool bad_pair(const Line &A, const Line &B, const Line &C) {
+    // (B.b - A.b)/(A.m - B.m) >= (C.b - B.b)/(B.m - C.m)
+    __int128 left = (__int128) (B.b - A.b) * (__int128) (B.m - C.m);
+    __int128 right = (__int128) (C.b - B.b) * (__int128) (A.m - B.m);
+    return left >= right;
+}
+
+static long double intersectX(const Line &L1, const Line &L2) {
+    return (long double) (L2.b - L1.b) / (long double) (L1.m - L2.m);
+}
+// to get min
+// add -m ,-b
+// and when query get -query
+struct DynamicCHT {
+    map<ll, Line> hull; // slope -> Line
+    // order: (xLeft, slope). xLeft increasing; slope as tie-breaker
+    set<pair<long double, ll> > order;
+    // helpers to maintain order set
+    void erase_order(ll slope, long double xLeft) {
+        order.erase({xLeft, slope});
+    }
+
+    void insert_order(ll slope, long double xLeft) {
+        order.insert({xLeft, slope});
+    }
+
+    void update_xLeft_for_it(map<ll, Line>::iterator it) {
+        // remove old pair if present (we don't know old xLeft so we try erase by value)
+        // but we can safely attempt erase using stored it->second.xLeft
+        erase_order(it->first, it->second.xLeft);
+        if (it == hull.begin()) {
+            it->second.xLeft = NEG_INF;
+            insert_order(it->first, it->second.xLeft);
+            return;
+        }
+        auto prev_it = prev(it);
+        it->second.xLeft = intersectX(prev_it->second, it->second);
+        insert_order(it->first, it->second.xLeft);
+    }
+
+    void add_line(ll m, ll b) {
+        // handle equal slopes: keep bigger intercept (max)
+        auto it = hull.lower_bound(m);
+        if (it != hull.end() && it->first == m) {
+            if (it->second.b >= b) return; // existing better
+            // remove existing
+            erase_order(it->first, it->second.xLeft);
+            hull.erase(it);
+        }
+
+        auto [it_new, inserted] = hull.emplace(m, Line(m, b, NEG_INF));
+        if (!inserted) return;
+
+        // check if new is useless between neighbors
+        if (it_new != hull.begin()) {
+            auto prev_it = prev(it_new);
+            auto next_it = next(it_new);
+            if (next_it != hull.end() && bad_pair(prev_it->second, it_new->second, next_it->second)) {
+                // new useless
+                hull.erase(it_new);
+                return;
+            }
+        }
+
+        // remove previous lines that become useless
+        while (true) {
+            if (it_new == hull.begin()) break;
+            auto prev_it = prev(it_new);
+            if (prev_it == hull.begin()) break;
+            auto prev2 = prev(prev_it);
+            if (bad_pair(prev2->second, prev_it->second, it_new->second)) {
+                // erase prev_it
+                erase_order(prev_it->first, prev_it->second.xLeft);
+                hull.erase(prev_it);
+            } else break;
+        }
+
+        // remove following lines that become useless
+        while (true) {
+            auto next_it = next(it_new);
+            if (next_it == hull.end()) break;
+            auto next2 = next(next_it);
+            if (next2 == hull.end()) break;
+            if (bad_pair(it_new->second, next_it->second, next2->second)) {
+                erase_order(next_it->first, next_it->second.xLeft);
+                hull.erase(next_it);
+            } else break;
+        }
+
+        // update xLeft for prev (if exists), new, next (if exists)
+        if (it_new != hull.begin()) {
+            auto prev_it = prev(it_new);
+            update_xLeft_for_it(prev_it);
+        }
+        update_xLeft_for_it(it_new);
+        auto next_it = next(it_new);
+        if (next_it != hull.end()) update_xLeft_for_it(next_it);
+    }
+
+    // query max at x
+    ll query(ll x) {
+        if (hull.empty()) return LLONG_MIN / 4;
+        // find first element with xLeft > x, so prev is the best line for x
+        // use pair (x, +inf slope) as key for upper_bound
+        auto it = order.upper_bound({(long double) x, LLONG_MAX});
+        if (it == order.begin()) {
+            // should not happen since first line has xLeft = -INF, but guard anyway
+            auto slope = order.begin()->second;
+            auto itmap = hull.find(slope);
+            return itmap->second.m * x + itmap->second.b;
+        }
+        --it;
+        ll slope = it->second;
+        auto itmap = hull.find(slope);
+        return itmap->second.m * x + itmap->second.b;
+    }
+};

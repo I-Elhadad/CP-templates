@@ -1,0 +1,19 @@
+There are a few fundamentals about Euler's totient we need to know:
+
+φ(p) = p - 1 and φ(p^k) = p^k - p^(k - 1) = p^k * (1 - 1/p), provided p is a prime number and k is a positive integer. You can easily prove these equations through the definition of the function itself.
+
+Euler's totient is a multiplicative function. φ(x) is considered a multiplicative function when gcd(a, b) = 1, which means:
+
+φ(a) * φ(b) = φ(a * b)
+
+Keep in mind that we can rewrite φ(p^k) as the following:
+
+  φ(p^k) = p^k * (p - 1) / p
+
+Let’s denote P as the set of prime factors of the product of a_i for i from 1 to r:
+
+  P = set of prime factors of ∏ (from i = 1 to r) a_i
+
+Thus, the answer for each query will simply be:
+
+  φ(∏ (from i = 1 to r) a_i) = ∏ (from i = 1 to r) a_i * ∏ (over p in P) (p - 1) / p

@@ -1,0 +1,75 @@
+struct SAT {  
+    int n;  
+    int id = 1;  
+    bool is_solvable = true;  
+    vector<int> cmp_root_node, comp_assigned_values, assigned_values;  
+    int cnt;  
+    SCC scc;  
+  
+    SAT(int n) : n(n) {  
+        scc = SCC(n);  
+        cnt = 0;  
+    }  
+  
+    void addOr(int a, int b) {  
+        // a or b = ~a->b and ~b->a  
+        scc.edges[NOT(a)].push_back(b);  
+        scc.edges[NOT(b)].push_back(a);  
+    }  
+  
+    void addXor(int a, int b) {  
+        // a xor b = (a or b) and (~a or ~b);  
+        addOr(a, b);  
+        addOr(NOT(a), NOT(b));  
+    }  
+  
+    void addMustT(int a) {  
+        scc.edges[NOT(a)].push_back(a);  
+    }  
+  
+    void addMustF(int a) {  
+        scc.edges[a].push_back(NOT(a));  
+    }  
+  
+    void addImplies(int a, int b) {  
+        // a->b  =  -b -> -a  
+        scc.edges[a].push_back(b);  
+        scc.edges[NOT(b)].push_back(NOT(a));  
+    }  
+  
+    void addBiImplies(int a, int b) {  
+        addImplies(a, b);  
+        addImplies(b, a);  
+    }  
+    // 0 first value  
+    // 1 not first value    int NOT(int i) {  
+        return i ^ 1;  
+    }  
+  
+    int POS(int i) {  
+        return i *= 2;  
+    }  
+  
+    bool start() {  
+        scc.start();  
+        for (int i = 0; i < n; i += 2) {  
+            if (scc.comp[i] == scc.comp[NOT(i)]) {  
+                is_solvable = false;  
+                break;  
+            }  
+        }  
+        if(!is_solvable)  
+        return is_solvable;  
+        comp_assigned_values = vector<int>((int) scc.comps.size(), -1);  
+        for (int i = 0; i < scc.comps.size(); i++) {  
+            if (comp_assigned_values[i] == -1) {  
+                comp_assigned_values[i] = 1;  
+                comp_assigned_values[scc.comp[(NOT(cmp_root_node[i]))]] = 0;  
+            }  
+        }  
+        for (int i = 0; i < n; i++) {  
+            assigned_values[i] = comp_assigned_values[scc.comp[i]];  
+        }  
+        return is_solvable;  
+    }  
+};

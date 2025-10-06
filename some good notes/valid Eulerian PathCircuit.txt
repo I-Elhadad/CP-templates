@@ -1,0 +1,20 @@
+What conditions are required for a valid Eulerian Path/Circuit?
+
+That depends on what kind of graph you're dealing with. Altogether there are four cases to consider:
+
+1. Undirected Graph - Eulerian Circuit:
+Every vertex must have an even degree.
+
+2. Undirected Graph - Eulerian Path:
+Either every vertex has an even degree, or exactly two vertices have an odd degree.
+
+3. Directed Graph - Eulerian Circuit:
+Every vertex must have equal indegree and outdegree.
+
+4. Directed Graph - Eulerian Path:
+
+At most one vertex has (outdegree - indegree) = 1
+
+At most one vertex has (indegree - outdegree) = 1
+
+All other vertices must have equal indegree and outdegree.

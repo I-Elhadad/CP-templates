@@ -1,0 +1,47 @@
+const int Log = 22;  
+struct BL {  
+    vector<int> depth;  
+    vector<vector<int>> edges;  
+    vector<vector<int>> up;  
+  
+    BL(int n) {  
+        depth = vector<int>(n + 10, 0);  
+        edges = vector<vector<int>>(n + 10);  
+        up = vector<vector<int>>(n + 10, vector<int>(Log, -1));  
+    }  
+  
+    void dfs(int node, int parent) {  
+        up[node][0] = parent;  
+        for (int j = 1; j < Log; j++) {  
+            if (up[node][j-1] != -1) {  
+                up[node][j] = up[up[node][j-1]][j-1];  
+            } else {  
+                up[node][j] = -1;  
+            }  
+        }  
+        for (auto it : edges[node]) {  
+            if (it == parent) continue;  
+            depth[it] = depth[node] + 1;  
+            dfs(it, node);  
+        }  
+    }  
+  
+    int get_LCA(int a, int b) {  
+        if (depth[a] < depth[b]) swap(a, b);  
+        int k = depth[a] - depth[b];  
+        for (int j = Log - 1; j >= 0; j--) {  
+            if (k & (1 << j)) {  
+                a = up[a][j];  
+                if (a == -1) break;  
+            }  
+        }  
+        if (a == b) return a;  
+        for (int j = Log - 1; j >= 0; j--) {  
+            if (up[a][j] != up[b][j]) {  
+                a = up[a][j];  
+                b = up[b][j];  
+            }  
+        }  
+        return up[a][0];  
+    }  
+};

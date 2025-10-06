@@ -1,0 +1,69 @@
+struct SG {
+    int size;
+    vector<int> Seg;
+
+    int merge(int a, int b) {
+        //merge as required
+        return a + b;
+    }
+
+    void init(int n) {
+        size = 1;
+        while (size < n) {
+            size *= 2;
+        }
+        Seg.resize(2 * size - 1);
+    }
+
+    void Build(vector<int> &arr, int pos, int l, int r) {
+        if (l == r) {
+            if (l < arr.size()) {
+                Seg[pos] = arr[l];
+            }
+            return;
+        }
+        int mid = l + (r - l) / 2;
+        Build(arr, 2 * pos + 1, l, mid);
+        Build(arr, 2 * pos + 2, mid + 1, r);
+        Seg[pos] = merge(Seg[2 * pos + 1], Seg[2 * pos + 2]);
+    }
+
+    void Build(vector<int> &arr) {
+        int n = arr.size();
+        Build(arr, 0, 0, size - 1);
+    }
+
+    void set(int idx, int val, int pos, int l, int r) {
+        if (l == r) {
+            Seg[pos] = val;
+            return;
+        }
+        int mid = l + (r - l) / 2;
+        if (idx <= mid) {
+            set(idx, val, 2 * pos + 1, l, mid);
+        } else {
+            set(idx, val, 2 * pos + 2, mid + 1, r);
+        }
+        Seg[pos] = merge(Seg[2 * pos + 1], Seg[2 * pos + 2]);
+    }
+
+    void set(int idx, int val) {
+        set(idx, val, 0, 0, size - 1);
+    }
+
+    int Query(int st, int en, int pos, int l, int r) {
+        if (l > en || r < st) {
+            return 0;
+        }
+        if (st <= l && r <= en) {
+            return Seg[pos];
+        }
+        int mid = l + (r - l) / 2;
+        //if there is calls here , call them or call 911 for contest
+        return merge(Query(st, en, 2 * pos + 1, l, mid), Query(st, en, 2 * pos + 2, mid + 1, r));
+    }
+
+    int Query(int st, int en) {
+        return Query(st, en, 0, 0, size - 1);
+    }
+};

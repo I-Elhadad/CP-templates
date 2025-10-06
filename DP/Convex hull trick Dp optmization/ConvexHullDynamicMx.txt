@@ -1,0 +1,106 @@
+struct item {
+    int d = 0, b = 0, s = 0, p = 0;
+
+    bool operator<(const item &other) {
+        return d < other.d;
+    }
+};
+
+// Dynamic convex hull for maximum: lines y = m*x + c
+// Slopes are stored in ascending order (map default). This matches query logic
+// for non-decreasing x queries.
+struct ConvexHullDynamicMax {
+    map<ll,ll> hull; // slope -> intercept, ascending slopes
+
+    // remove B if intersection(A,B) >= intersection(B,C)
+    static bool bad(const pair<ll,ll> &A, const pair<ll,ll> &B, const pair<ll,ll> &C) {
+        __int128 left = __int128(B.second - A.second) * __int128(B.first - C.first);
+        __int128 right = __int128(C.second - B.second) * __int128(A.first - B.first);
+        return left >= right;
+    }
+
+    void add_line(ll m, ll c) {
+        auto it = hull.find(m);
+        if (it != hull.end()) {
+            if (it->second >= c) return; // existing line is better or equal
+            it->second = c;
+        } else {
+            it = hull.emplace(m, c).first;
+        }
+
+        // if it has both neighbours and is useless, erase it
+        if (it != hull.begin() && next(it) != hull.end()) {
+            auto prev_it = prev(it), next_it = next(it);
+            if (bad(*prev_it, *it, *next_it)) {
+                hull.erase(it);
+                return;
+            }
+        }
+
+        // remove previous lines that become useless
+        while (it != hull.begin()) {
+            auto cur = it;
+            auto prev_it = prev(cur);
+            if (prev_it == hull.begin()) break;
+            auto prev2 = prev(prev_it);
+            if (bad(*prev2, *prev_it, *cur)) hull.erase(prev_it);
+            else break;
+        }
+
+        // remove following lines that become useless
+        while (next(it) != hull.end()) {
+            auto cur = it;
+            auto nxt = next(cur);
+            if (next(nxt) == hull.end()) break;
+            if (bad(*cur, *nxt, *next(nxt))) hull.erase(nxt);
+            else break;
+        }
+    }
+
+    // Query maximum at x. We pop front lines while the next line gives >= value.
+    // This is safe because slopes are ascending and queries x are non-decreasing.
+    ll query(ll x) {
+        while (hull.size() >= 2) {
+            auto it = hull.begin();
+            auto it2 = next(it);
+            __int128 v1 = __int128(it->first) * x + it->second;
+            __int128 v2 = __int128(it2->first) * x + it2->second;
+            if (v2 >= v1) hull.erase(it);
+            else break;
+        }
+        auto it = hull.begin();
+        return ((__int128(it->first) * x) + it->second);
+    }
+};
+
+
+signed main() {
+    Go();
+    int n, c, d;
+    int cnt = 1;
+    while (cin >> n >> c >> d) {
+        if (!n)break;
+        vector<item> v(n + 2);
+        for (int i = 1; i <= n; i++) {
+            cin >> v[i].d >> v[i].b >> v[i].s >> v[i].p;
+        }
+        v[0].s = c;
+        v[n + 1].d = d + 1;
+        sort(v.begin(), v.end());
+        int dp[n + 2]{};
+        ConvexHullDynamicMx cht;
+        dp[0] = c;
+        cht.add_line(0, c);
+        for (int i = 1; i <= n + 1; i++) {
+            int x = v[i].d;
+            dp[i] = cht.query(x);
+            if (dp[i] >= v[i].b) {
+                int newM = v[i].p;
+                int newB = dp[i] - v[i].b + v[i].s + -v[i].d * v[i].p - v[i].p;
+                cht.add_line(newM, newB);
+            }
+        }
+        cout << "Case " << cnt++ << ": ";
+        cout << dp[n + 1] << endl;
+    }
+}

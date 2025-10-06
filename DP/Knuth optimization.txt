@@ -1,0 +1,81 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+/*
+ Knuth optimization template for segment DP:
+ dp[i][j] = min_{k in [i, j-1]} { dp[i][k] + dp[k+1][j] + w(i,j) }
+ where w(i,j) is a "quadrangle-friendly" cost (e.g., sum over segment).
+ If the necessary monotonicity/quadrangle inequality conditions hold,
+ opt[i][j-1] <= opt[i][j] <= opt[i+1][j] and we can restrict k to:
+   k in [opt[i][j-1], opt[i+1][j]]
+ This reduces the DP from O(n^3) to O(n^2).
+
+ This example solves the "merge stones" / optimal merging problem where
+ w(i,j) = sum(a[i..j]). Adapt w(i,j) if you have a different cost.
+*/
+
+using ll = long long;
+const ll INF = (ll)9e18;
+
+int main() {
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+
+    int n;
+    if (!(cin >> n)) return 0;
+
+    vector<ll> a(n+1);
+    for (int i = 1; i <= n; ++i) cin >> a[i];
+
+    // prefix sums for O(1) range sums
+    vector<ll> pref(n+1, 0);
+    for (int i = 1; i <= n; ++i) pref[i] = pref[i-1] + a[i];
+
+    auto w = [&](int L, int R) -> ll {
+        // cost of merging segment [L..R]
+        return pref[R] - pref[L-1];
+    };
+
+    // dp[i][j] = minimal cost to merge segment [i..j] into one piece
+    vector<vector<ll>> dp(n+2, vector<ll>(n+2, 0));
+    // opt[i][j] = argmin k for dp[i][j]
+    vector<vector<int>> opt(n+2, vector<int>(n+2, 0));
+
+    // base cases: dp[i][i] = 0, opt[i][i] = i
+    for (int i = 1; i <= n; ++i) {
+        dp[i][i] = 0;
+        opt[i][i] = i;
+    }
+
+    // iterate over lengths
+    for (int len = 2; len <= n; ++len) {
+        for (int i = 1; i + len - 1 <= n; ++i) {
+            int j = i + len - 1;
+            dp[i][j] = INF;
+
+            // Knuth: restrict k in [opt[i][j-1], opt[i+1][j]]
+            int L = opt[i][j-1];
+            int R = opt[i+1][j];
+            if (L == 0) L = i;       // safety when opt hasn't been set (shouldn't be needed)
+            if (R == 0) R = j-1;     // safety
+            // ensure bounds are valid
+            L = max(L, i);
+            R = min(R, j-1);
+
+            // fallback: if something wrong with monotonicity, search full range
+            if (L > R) { L = i; R = j-1; }
+
+            for (int k = L; k <= R; ++k) {
+                ll cand = dp[i][k] + dp[k+1][j] + w(i, j);
+                if (cand < dp[i][j]) {
+                    dp[i][j] = cand;
+                    opt[i][j] = k;
+                }
+            }
+        }
+    }
+
+    // answer: minimal cost to merge [1..n]
+    cout << dp[1][n] << '\n';
+    return 0;
+}

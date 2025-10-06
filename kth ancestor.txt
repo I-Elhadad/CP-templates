@@ -1,0 +1,30 @@
+// 1 based
+vector<ll>depth(2e5+10);
+vector<vector<ll>>edges(2e5+10);
+vector<vector<ll>>up(2e5+10,vector<ll>(21));
+void dfs(ll node,ll parent,ll cnt)
+{
+    depth[node]= cnt;
+    for(auto it:edges[node])
+    {
+        if(it==parent)continue;
+        up[it][0]=node;
+        for(int j=1;j<21;j++)
+            up[it][j]=up[up[it][j-1]][j-1];
+
+        dfs(it,node,cnt+1);
+    }
+}
+int get_ancestor(ll x,ll k)
+{
+    if(k>depth[x])return -1;
+    for(int j=20;j>=0;j--)
+    {
+        if(k&(1<<j))
+        {
+            x=up[x][j];
+        }
+    }
+    return x;
+
+}

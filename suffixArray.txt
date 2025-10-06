@@ -1,0 +1,116 @@
+struct suffixArray {  
+private:  
+    string s;  
+    // pos: pos[i] = starting index of the i-th smallest suffix in 's'.
+    vector<int> pos;  
+    // cost: cost[i] = rank of the suffix starting at index i among all suffixes.
+    vector<int> cost;  
+    // lcp: lcp[i] = length of longest common prefix between suffixes at pos[i] and pos[i+1].
+    vector<int> lcp;  
+  
+    int n = 0;  
+    bool donePos = false, doneLcp = false;  
+public:  
+    suffixArray(string s) {  
+        this->s = s;  
+        this->s.push_back((char) 'a' - 1);  
+        n = (this->s).size();  
+        pos.resize(n);  
+        cost.resize(n);  
+        lcp.resize(n);  
+    }  
+  
+    void countSort() {  
+        vector<int> cnt(n);  
+        for (auto it: cost) {  
+            cnt[it]++;  
+        }  
+        vector<int> p(n);  
+        vector<int> pos_new(n);  
+        p[0] = 0;  
+        for (int i = 1; i < n; i++) {  
+            p[i] = p[i - 1] + cnt[i - 1];  
+        }  
+        for (auto it: pos) {  
+            int i = cost[it];  
+            pos_new[p[i]] = it;  
+            p[i]++;  
+        }  
+        pos = pos_new;  
+  
+    }  
+    void computePos() {  
+        {  
+            vector<pair<int, int>> a(s.size());  
+            for (int i = 0; i < s.size(); i++) {  
+                a[i] = {s[i], i};  
+            }  
+            sort(a.begin(), a.end());  
+            for (int i = 0; i < n; i++)pos[i] = a[i].second;  
+            cost[pos[0]] = 0;  
+            for (int i = 1; i < n; i++) {  
+                if (a[i].first == a[i - 1].first) {  
+                    cost[pos[i]] = cost[pos[i - 1]];  
+                } else  
+                    cost[pos[i]] = cost[pos[i - 1]] + 1;  
+            }  
+        }  
+        int k = 0;  
+        while ((1 << k) <= n) {  
+            for (int i = 0; i < n; i++) {  
+                pos[i] = (pos[i] - ((1 << k)) + n) % n;  
+            }  
+            countSort();  
+            vector<int> cost_new(n);  
+            cost_new[pos[0]] = 0;  
+            for (int i = 1; i < n; i++) {  
+                pair<int, int> prev = {cost[pos[i - 1]], cost[(pos[i - 1] + (1 << k)) % n]};  
+                pair<int, int> cur = {cost[pos[i]], cost[(pos[i] + (1 << k)) % n]};  
+                if (prev == cur) {  
+                    cost_new[pos[i]] = cost_new[pos[i - 1]];  
+                } else  
+                    cost_new[pos[i]] = cost_new[pos[i - 1]] + 1;  
+            }  
+            cost = cost_new;  
+            k++;  
+        }  
+        donePos = true;  
+    }  
+  
+    vector<int> getPos() {  
+        if (!donePos)computePos();  
+        return pos;  
+    }  
+    void computeLcp() {  
+        // lcp[0]= is between index 0 and 1  
+        if (!donePos)computePos();  
+        int k = 0;  
+        for (int i = 0; i < n - 1; i++) {  
+            int pi = cost[i];  
+            int j = pos[pi - 1];  
+            while (s[i + k] == s[j + k])k++;  
+            lcp[pi] = k;  
+            k = max(0ll, k - 1);  
+        }  
+        lcp.erase(lcp.begin());  
+        doneLcp = true;  
+    }  
+  
+    vector<int> getLcp() {  
+        if (!doneLcp)  
+            computeLcp();  
+        return lcp;  
+    }  
+  
+    vector<int> getCost() {  
+        if (!donePos)  
+            computePos();  
+        return cost;  
+    }  
+    string getSub(int st, int len) {  
+        string temp = "";  
+        for (int j = st; j < st + len; j++)  
+            temp += s[j % n];  
+        return temp;  
+    }  
+};

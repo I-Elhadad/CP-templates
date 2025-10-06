@@ -1,0 +1,48 @@
+const int MOD = 1e9 + 7;  
+   
+ui mul(ui x, ui y) {  
+    return ((ll) (x) % MOD * (ll) (y) % MOD) % MOD;  
+}  
+   
+ui add(ui x, ui y) {  
+    return ((x) % MOD + (y) % MOD) % MOD;  
+}  
+struct Matrix {  
+    vector<vector<ui> > M;  
+  
+    static vector<vector<ui> > identity(int n, int m) {  
+        vector<vector<ui> > id(n, vector<ui>(m, 0));  
+        for (int i = 0; i < n && i < m; ++i)  
+            id[i][i] = 1;  
+        return id;  
+    }  
+  
+    static vector<vector<ui> > Mul(vector<vector<ui> > a, vector<vector<ui> > b) {  
+        int n = a.size();  
+        int m = b[0].size();  
+        int p = a[0].size(); // Must equal b.size()  
+        vector<vector<ui> > result(n, vector<ui>(m, 0));  
+        for (int i = 0; i < n; ++i)  
+            for (int j = 0; j < m; ++j)  
+                for (int k = 0; k < p; ++k)  
+                    result[i][j] = add(result[i][j], mul(a[i][k], b[k][j]));  
+  
+        return result;  
+    }  
+  
+    static vector<vector<ui> > Power(vector<vector<ui> > a, int b) {  
+        if (b == 0) return identity(a.size(), a[0].size());  
+        auto ans = Power(a, b / 2);  
+        ans = Mul(ans, ans);  
+        if (b & 1)  
+            return Mul(a, ans);  
+        return ans;  
+    }  
+  
+  
+    vector<vector<ui> > MatrixExpo(vector<vector<ui> > matrix, vector<vector<ui> > a, int p) {  
+        M = matrix;  
+        M = Power(M, p);  
+        return Mul(M, a);  
+    }  
+};

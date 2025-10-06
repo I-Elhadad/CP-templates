@@ -1,0 +1,83 @@
+struct SG {  
+    int size;  
+    vector<vector<int>> Seg;  
+  
+    vector<int> merge(vector<int> &a, vector<int> &b) {  
+        //merge as required  
+        vector<int> ans;  
+        int l = 0, r = 0;  
+        while (l < a.size() && r < b.size()) {  
+            if (a[l] < b[r]) {  
+                ans.push_back(a[l++]);  
+            } else {  
+                ans.push_back(b[r++]);  
+            }  
+        }  
+        while (l < a.size()) {  
+            ans.push_back(a[l++]);  
+        }  
+        while (r < b.size()) {  
+            ans.push_back(b[r++]);  
+        }  
+        return ans;  
+    }  
+  
+    int mergeAns(int a, int b) {  
+        //merge as required  
+        return a + b;  
+    }  
+  
+    void init(int n) {  
+        size = 1;  
+        while (size < n) {  
+            size *= 2;  
+        }  
+        Seg.resize(2 * size - 1);  
+    }  
+  
+    void Build(vector<int> &arr, int pos, int l, int r) {  
+        if (l == r) {  
+            if (l < arr.size()) {  
+                Seg[pos] = {arr[l]};  
+            }  
+            return;  
+        }  
+        int mid = l + (r - l) / 2;  
+        Build(arr, 2 * pos + 1, l, mid);  
+        Build(arr, 2 * pos + 2, mid + 1, r);  
+        Seg[pos] = merge(Seg[2 * pos + 1], Seg[2 * pos + 2]);  
+    }  
+  
+    void Build(vector<int> arr) {  
+        int n = arr.size();  
+        map<ll, ll> last_seen;  
+        for (int i = n - 1; i >= 0; i--) {  
+            int val = arr[i];  
+            if (last_seen.count(arr[i])) {  
+  
+                arr[i] = last_seen[arr[i]];  
+                last_seen[val] = i;  
+            } else arr[i] = n, last_seen[val] = i;  
+        }  
+//        for(auto it:arr)  
+//            cout<<it<<" ";  
+//        cout<<endl;  
+        Build(arr, 0, 0, size - 1);  
+    }  
+  
+    int Query(int st, int en, int val, int pos, int l, int r) {  
+        if (l > en || r < st) {  
+            return 0;  
+        }  
+        if (st <= l && r <= en) {  
+            return Seg[pos].end() - upper_bound(Seg[pos].begin(), Seg[pos].end(), val);  
+        }  
+        int mid = l + (r - l) / 2;  
+        int ret = mergeAns(Query(st, en, val, 2 * pos + 1, l, mid), Query(st, en, val, 2 * pos + 2, mid + 1, r));  
+        return ret;  
+    }  
+  
+    int Query(int st, int en, int val) {  
+        return Query(st, en, val, 0, 0, size - 1);  
+    }  
+};

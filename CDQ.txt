@@ -1,0 +1,118 @@
+//    #pragma GCC optimize ("O3")
+//    #pragma GCC optimize ("unroll-loops")
+//    #pragma comment(linker, "/STACK:2000000")
+#include<bits/stdc++.h>
+using namespace std;
+#define ll long long
+
+// #define int ll
+#define ld long double
+#define  ui unsigned int
+#define endl "\n"
+#define FOCUS ios_base::sync_with_stdio(0);cin.tie(0);cout.tie(0);
+
+void Go() {
+    ios_base::sync_with_stdio(false), cin.tie(nullptr), cout.tie(nullptr);
+#ifndef ONLINE_JUDGE
+    freopen("input.txt", "r", stdin);
+    freopen("output.txt", "w", stdout);
+#endif
+}
+
+const int N = 2e5;
+
+struct FenwickMax {
+    int n;
+    vector<int> bit;
+
+    void init(int _n) {
+        n = _n;
+        bit.assign(n + 1, 0);
+    }
+
+    inline int lowbit(int x) { return x & -x; }
+    // point update: set position x to max(current, val)
+    void update(int x, int val) {
+        for (int i = x; i <= n; i += lowbit(i))
+            bit[i] = max(bit[i], val);
+    }
+
+    // prefix query: max on [1..x]
+    int query(int x) {
+        int res = 0;
+        for (int i = x; i > 0; i -= lowbit(i))
+            res = max(res, bit[i]);
+        return res;
+    }
+
+    // reset tree entries that were touched (used for rollback)
+    void reset_index(int x) {
+        for (int i = x; i <= n; i += lowbit(i))
+            bit[i] = 0;
+    }
+} bit;
+
+
+vector<int> dp(N, 1);
+vector<pair<int, int> > v(N);
+vector<int> compress;
+
+int getRank(int val) {
+    return lower_bound(compress.begin(), compress.end(), val) - compress.begin();
+}
+
+void CDQ(int l, int r) {
+    if (l == r) {
+        return;
+    }
+    int mid = l + (r - l) / 2;
+    // first solve left
+    CDQ(l, mid);
+    vector<array<ll, 3> > left, right;
+    for (int i = l; i <= r; i++) {
+        if (i <= mid)left.push_back({v[i].first, v[i].second, i});
+        else right.push_back({v[i].first, v[i].second, i});
+    }
+    vector<pair<int, int> > updates;
+    sort(left.begin(), left.end());
+    sort(right.begin(), right.end());
+    int j = 0;
+    for (int i = 0; i < right.size(); i++) {
+        while (j < left.size() && left[ j][0] < right[i][0]) {
+            updates.push_back({getRank(left[j][1]), dp[left[j][2]]});
+            bit.update(getRank(left[j][1]), dp[left[j][2]]);
+            j++;
+        }
+        int best = bit.query(getRank(right[i][1]) - 1);
+        dp[right[i][2]] = max(dp[right[i][2]], best + 1);
+    }
+
+    for (auto [idx,val]: updates) {
+        bit.reset_index(idx);
+    }
+    CDQ(mid + 1, r);
+}
+
+void solve() {
+    int n;
+    cin >> n;
+    for (int i = 0; i < n; i++) {
+        cin >> v[i].first >> v[i].second;
+        compress.push_back(v[i].second);
+    }
+    compress.push_back(-2e9);
+    sort(compress.begin(), compress.end());
+    compress.erase(unique(compress.begin(), compress.end()), compress.end());
+    bit.init(compress.size());
+    CDQ(0, n - 1);
+    cout << *max_element(dp.begin(), dp.end());
+}
+
+signed main() {
+    Go();
+    int t = 1;
+    // cin >> t;
+    while (t--) {
+        solve();
+    }
+}

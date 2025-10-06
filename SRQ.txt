@@ -1,0 +1,111 @@
+//    #pragma GCC optimize ("O3")
+//    #pragma GCC optimize ("unroll-loops")
+//    #pragma comment(linker, "/STACK:2000000")
+#include<bits/stdc++.h>
+using namespace std;
+#define ll long long
+
+// #define int ll
+
+#define ld long double
+#define  ui unsigned int
+#define endl "\n"
+#define FOCUS ios_base::sync_with_stdio(0);cin.tie(0);cout.tie(0);
+
+void Go() {
+    ios_base::sync_with_stdio(false), cin.tie(nullptr), cout.tie(nullptr);
+#ifndef ONLINE_JUDGE
+    freopen("input.txt", "r", stdin);
+    freopen("output.txt", "w", stdout);
+#endif
+}
+
+const int N = 2e6;
+// init values accordint to problem
+vector<int> v(N, INT32_MIN);
+int mxLevel;
+pair<int, int> table[21][N];
+// if you want to define int long long
+// use clzll and 63 instead of 31
+void build(int l, int r, int level = 0) {
+    if (l == r) {
+        table[level][l] = {v[l], 1};
+        return;
+    }
+    int mid = (l + r) / 2;
+    for (int i = mid; i >= l; i--) {
+        table[level][i] = {v[i], 1};
+        if (i != mid) {
+            if (table[level][i + 1].first == v[i])
+                table[level][i].second += table[level][i + 1].second;
+            else if (v[i] < table[level][i + 1].first)table[level][i] = table[level][i + 1];
+        }
+    }
+    for (int i = mid + 1; i <= r; i++) {
+        table[level][i] = {v[i], 1};
+        if (i != mid + 1) {
+            if (table[level][i - 1].first == v[i])
+                table[level][i].second += table[level][i - 1].second;
+            else if (v[i] < table[level][i - 1].first)table[level][i] = table[level][i - 1];
+        }
+    }
+    build(l, mid, level + 1);
+    build(mid + 1, r, level + 1);
+}
+
+int query(int l, int r) {
+    if (l == r)return 1;
+    int t = 31 - __builtin_clz(l ^ r);
+    int level = mxLevel - 1 - t;
+    pair<int, int> A = table[level][l];
+    pair<int, int> B = table[level][r];
+    if (A.first == B.first) return A.second + B.second;
+    return ((A.first > B.first) ? A.second : B.second);
+}
+
+void pre(int n) {
+    mxLevel = __builtin_clz(n) ^ 31;
+    int size = n;
+    if ((1 << mxLevel) != n)
+        size = (1 << ++mxLevel);
+    build(0, size - 1, 0);
+}
+
+const int MOD = 1e9 + 7;
+
+void solve() {
+    int n;
+    cin >> n;
+    for (int i = 0; i < n; i++)cin >> v[i];
+    long long q, x, y, z, t;
+    cin >> q >> x >> y >> z >> t;
+    pre(n);
+    ll last = 0;
+    ll product = 1;
+    for (long long i = 0; i < q; ++i) {
+        long long li = ((last * x + y) % n) + 1;
+        long long ri = ((last * z + t) % n) + 1;
+
+
+        int l = (int) min(li, ri);
+        int r = (int) max(li, ri);
+        if (l > r)swap(l, r);
+        int ans = query(l - 1, r - 1);
+        last = ans;
+
+
+        product = (product * (ans % MOD)) % MOD;
+    }
+
+
+    cout << product << '\n';
+}
+
+signed main() {
+    // Go();
+    int t = 1;
+    // cin >> t;
+    while (t--) {
+        solve();
+    }
+}

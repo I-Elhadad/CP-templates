@@ -1,0 +1,51 @@
+struct Node {
+    ll sum, add;
+    Node *l, *r;
+
+    Node(ll s = 0, ll a = 0, Node *L = nullptr, Node *R = nullptr): sum(s), add(a), l(L), r(R) {
+    }
+};
+
+Node *build(const vector<ll> &a, int st, int en) {
+    if (st == en) return new Node(a[st], 0, nullptr, nullptr);
+    int mid = (st + en) / 2;
+    Node *L = build(a, st, mid);
+    Node *R = build(a, mid + 1, en);
+    return new Node(L->sum + R->sum, 0, L, R);
+}
+
+void push(Node *node, int st, int en) {
+    if (!node || node->add == 0 || st == en) return;
+    int mid = (st + en) / 2;
+    node->l = new Node(node->l->sum + node->add * (mid - st + 1), node->l->add + node->add, node->l->l, node->l->r);
+    node->r = new Node(node->r->sum + node->add * (en - mid), node->r->add + node->add, node->r->l, node->r->r);
+    node->add = 0;
+}
+
+Node *update(Node *cur, int l, int r, ll val, int st, int en) {
+    if (r < st || l > en) return cur;
+    Node *node = new Node(cur->sum, cur->add, cur->l, cur->r);
+    if (l <= st && en <= r) {
+        node->add += val;
+        node->sum += val * (en - st + 1);
+        return node;
+    }
+    int mid = (st + en) / 2;
+    push(node, st, en);
+    node->l = update(node->l, l, r, val, st, mid);
+    node->r = update(node->r, l, r, val, mid + 1, en);
+    node->sum = node->l->sum + node->r->sum;
+    return node;
+}
+
+ll query(Node *cur, int l, int r, int st, int en, ll carry = 0) {
+    if (r < st || l > en) return 0;
+    if (!cur) return 0;
+    if (l <= st && en <= r) return cur->sum + carry * (en - st + 1);
+    int mid = (st + en) / 2;
+    carry += cur->add;
+    return query(cur->l, l, r, st, mid, carry) + query(cur->r, l, r, mid + 1, en, carry);
+}
+
+const int N = 2e5 + 5;
+vector<Node *> roots(N);

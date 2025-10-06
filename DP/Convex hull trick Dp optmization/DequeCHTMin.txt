@@ -1,0 +1,69 @@
+// ------------------------- DequeCHTMin -------------------------
+// Add lines with strictly INCREASING slope (m).
+// Query x must be non-decreasing across calls.
+// Returns min(m*x + c).
+struct DequeCHTMin {
+    struct Line {
+        ll m, c;
+    };
+
+    deque<Line> dq;
+
+    // check whether middle line b is useless between a and c
+    static bool bad(const Line &a, const Line &b, const Line &c) {
+        // intersection(a,b) <= intersection(b,c)  --> b is useless
+        // (c_b - c_a)/(m_a - m_b) <= (c_c - c_b)/(m_b - m_c)
+        __int128 left = __int128(b.c - a.c) * __int128(b.m - c.m);
+        __int128 right = __int128(c.c - b.c) * __int128(a.m - b.m);
+        return left >= right;
+    }
+
+    void add_line(ll m, ll c) {
+        // slopes must be strictly increasing
+        Line L{m, c};
+        while (dq.size() >= 2 && bad(dq[dq.size() - 2], dq[dq.size() - 1], L))
+            dq.pop_back();
+        dq.push_back(L);
+    }
+
+    // x must be non-decreasing between queries
+    ll query(ll x) {
+        while (dq.size() >= 2) {
+            ll v1 = dq[0].m * x + dq[0].c;
+            ll v2 = dq[1].m * x + dq[1].c;
+            if (v2 <= v1) dq.pop_front();
+            else break;
+        }
+        return dq.front().m * x + dq.front().c;
+    }
+};
+
+signed main() {
+    Go();
+    int n;
+    cin >> n;
+    vector<int> a(n), b(n);
+    int idx = 0;
+    for (int i = n - 1; i >= 0; i--)cin >> a[i], idx += (a[i] == 1);
+    for (int i = n - 1; i >= 0; i--)cin >> b[i];
+    while (idx > 1) {
+        idx -= (a.back() == 1);
+        a.pop_back();
+        b.pop_back();
+    }
+    DequeCHTMin cht;
+    reverse(a.begin(), a.end());
+    reverse(b.begin(), b.end());
+    vector<int> dp(a.size(), 1e18);
+    dp[0] = 0;
+    cht.add_line(b.front(), 0);
+    for (int i = 1; i < a.size(); i++) {
+        // mx+b
+        // x=dp[i]
+        // m=b[j]
+        // b=dp[j];
+        dp[i] = cht.query(a[i]);
+        cht.add_line(b[i], dp[i]);
+    }
+    cout << dp.back() << endl;
+}

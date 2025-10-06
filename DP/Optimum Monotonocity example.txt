@@ -1,0 +1,70 @@
+/*
+You're given B balls and an M-floor building.
+
+There exists a critical floor K (0 ≤ K ≤ M):
+
+Dropping a ball from above K (i.e., floor > K) causes it to break.
+
+Dropping it from at or below K does not break.
+
+The task is to determine the exact value of K, in the worst case, using the fewest number of drops.
+
+In other words, you want to minimize the maximum number of drops needed across all possible scenarios.
+*/
+//    #pragma GCC optimize ("O3")
+//    #pragma GCC optimize ("unroll-loops")
+//    #pragma comment(linker, "/STACK:2000000")
+#include<bits/stdc++.h>
+
+using namespace std;
+#define ll long long
+#define int ll
+#define ld long double
+#define  ui unsigned int
+#define FOCUS ios_base::sync_with_stdio(0);cin.tie(0);cout.tie(0);
+
+void Go() {
+    ios_base::sync_with_stdio(false), cin.tie(nullptr), cout.tie(nullptr);
+#ifndef ONLINE_JUDGE
+    freopen("input.txt", "r", stdin);
+    freopen("output.txt", "w", stdout);
+#endif
+}
+
+signed main() {
+    Go();
+    int t;
+    cin >> t;
+
+    while (t--) {
+        int c, B, H;
+        cin >> c >> B >> H;
+        int dp[H + 1][B + 1]{};
+        for (int b = 1; b <= B; b++) {
+            int k=1;
+            // why k can be global
+            // the idea here is when h increase then best point same or increase can't be less
+            // so inner loop can be removed
+            
+            for (int h = 1; h <= H; h++) {
+                int &ret = dp[h][b];
+                if (b == 1) {
+                    ret = h;
+                    continue;
+                }
+                ret = 1e18;
+                for (; k <= h; k++) {
+                    // 2 cases
+                    // case 1 ball destroyed -> b-1 h-1
+                    // case 2 not destroyed -> b -> n-h
+                    if (dp[k - 1][b - 1]>=dp[h - k][b]) {
+                        ret=dp[k - 1][b - 1]+1;
+                        break;
+                    }
+                }
+            }
+        }
+        cout<<c<<" ";
+        cout << dp[H][B] << endl;
+    }
+}

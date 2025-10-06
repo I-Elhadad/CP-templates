@@ -1,0 +1,71 @@
+ int n;
+    cin >> n;
+    vector<ll> v(n);
+    for (int i = 0; i < n; i++)
+        cin >> v[i];
+    vector<ll> edges[n];
+    for (int i = 0; i < n - 1; i++) {
+        ll x, y;
+        cin >> x >> y;
+        x--, y--;
+        edges[x].push_back(y);
+        edges[y].push_back(x);
+    }
+
+    vector<ll> sz(n), big(n),ans(n),sum(n),freq(1e5+1);
+    int mx=0;
+    // pre process to calc heavy edge and size of every subtree
+    function<void(ll, ll)> pre = [&](ll node, ll parent) {
+        sz[node] = 1;
+        big[node] = -1;
+        for (auto it: edges[node]) {
+            if (it != parent) {
+                pre(it, node);
+                sz[node] += sz[it];
+                if (big[node] == -1 || sz[it] > sz[big[node]])
+                    big[node] = it;
+            }
+        }
+    };
+        pre(0, -1);
+        // update function to implement logic of adding and removing nodes
+        function<void(int, int)> update = [&](int col, int d) {
+            if(freq[col]+d>mx)
+            {
+                mx++;
+            }
+            else if(freq[col]==mx&&sum[freq[col]]==col)mx--;
+            sum[freq[col]]-=col;
+            freq[col]+=d;
+            sum[freq[col]]+=col;
+        };
+        // collect  subtree
+        function<void(int, int, int)> collect = [&](ll node, ll parent, ll d) {
+            update(v[node],d);
+            for (auto it: edges[node]) {
+                if (it != parent)
+                    collect(it, node, d);
+            }
+        };
+        function<void(ll, ll, bool)> dfs = [&](ll node, ll parent, bool keep) {
+            for (auto it: edges[node]) {
+                if (it != parent && it != big[node])
+                    dfs(it, node, false);
+            }
+
+            // add to DS
+            if (big[node] != -1)
+                dfs(big[node], node, true);
+            update(v[node], 1);
+            for (auto it: edges[node]) {
+                if (it != parent && it != big[node])
+                    collect(it, node, 1);
+            }
+            // answer  queries
+            ans[node]=sum[mx];
+            //cout<<node<<" "<<sum[node]<<endl;
+            // Remove form DS
+            if (!keep)
+                collect(node, parent, -1);
+        };
+        dfs(0,-1, true);

@@ -1,0 +1,56 @@
+
+struct SCC {
+    ll n, m;
+    vector<set<ll>> edges;
+    stack<ll> stk;
+    ll id = 1;
+    vector<ll> instk, lowlink, dfn, comp;
+    vector<vector<ll>> comps;
+
+    SCC(ll n, ll m) : n(n), m(m) {
+        edges.resize(n + 1);
+        instk.resize(n + 1, 0);
+        lowlink.resize(n + 1, 0);
+        dfn.resize(n + 1, 0);
+        comp.resize(n + 1, -1);
+    }
+
+    void dfs(ll node, ll cnt) {
+        lowlink[node] = dfn[node] = id++;
+        instk[node] = 1;
+        stk.push(node);
+        cnt++;
+        for (ll it: edges[node]) {
+            if (dfn[it] == 0) {
+                dfs(it, cnt);
+                lowlink[node] = min(lowlink[it], lowlink[node]);
+            } else if (instk[it]) {
+
+                lowlink[node] = min(dfn[it], lowlink[node]);
+            }
+        }
+
+        if (lowlink[node] == dfn[node]) {
+
+            ll x = -1;
+            comps.push_back(vector<ll>());
+
+            while (x != node) {
+                x = stk.top();
+                stk.pop();
+                instk[x] = 0;
+                comps.back().push_back(x);
+                comp[x] = (ll) (comps.size()) - 1;
+            }
+        }
+
+    }
+
+    void start() {
+        for (ll i = 1; i <= n; i++) {
+            if (dfn[i] == 0) {
+                dfs(i, 0);
+            }
+        }
+    }
+};

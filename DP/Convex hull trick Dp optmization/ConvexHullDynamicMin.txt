@@ -1,0 +1,113 @@
+ ConvexHullDynamicMin
+ Maintains lines y = mx + c and answers min(mx + c).
+ Slopes are stored in descending order using map..., greaterll.
+ Query works in amortized O(1) if x is monotonic (non-decreasing).
+struct ConvexHullDynamicMin {
+     store as slope - intercept, slopes strictly decreasing (map with greater)
+    stdmapll,ll, stdgreaterll hull;
+
+    static bool bad(const stdpairll,ll &A, const stdpairll,ll &B, const stdpairll,ll &C) {
+         intersection(A,B) = intersection(B,C) = B is useless
+        __int128 left  = __int128(B.second - A.second)  __int128(B.first - C.first);
+        __int128 right = __int128(C.second - B.second)  __int128(A.first - B.first);
+        return left = right;
+    }
+
+    void add_line(ll m, ll c) {
+         find position (map is descending by slope)
+        auto it = hull.lower_bound(m);
+        if (it != hull.end() && it-first == m) {
+            if (it-second = c) return;  existing line is better or equal
+            it-second = c;  replace intercept with better one
+        } else {
+            it = hull.emplace_hint(it, m, c);  emplace with hint
+        }
+
+         if new line is useless between neighbors, remove it
+        if (it != hull.begin() && stdnext(it) != hull.end()) {
+            auto prev_it = stdprev(it);
+            auto next_it = stdnext(it);
+            if (bad(prev_it, it, next_it)) {
+                hull.erase(it);
+                return;
+            }
+        }
+
+         fix previous remove any previous line that became useless
+        while (it != hull.begin()) {
+            auto cur = it;
+            auto prev_it = stdprev(cur);
+            if (prev_it == hull.begin()) break;
+            auto prev2 = stdprev(prev_it);
+            if (bad(prev2, prev_it, cur)) hull.erase(prev_it);
+            else break;
+        }
+
+         fix next remove any next line that became useless
+        while (stdnext(it) != hull.end()) {
+            auto cur = it;
+            auto nxt = stdnext(cur);
+            if (stdnext(nxt) == hull.end()) break;
+            if (bad(cur, nxt, stdnext(nxt))) hull.erase(nxt);
+            else break;
+        }
+    }
+
+     Query min value at x.
+     NOTE this pops front lines, so queries are amortized O(1) only if x is non-decreasing.
+    ll query(ll x) {
+        if (hull.empty()) throw stdruntime_error(ConvexHullDynamicMinquery on empty hull);
+        while (hull.size() = 2) {
+            auto it = hull.begin();
+            auto it2 = stdnext(it);
+            __int128 v1 = __int128(it-first)  x + it-second;
+            __int128 v2 = __int128(it2-first)  x + it2-second;
+            if (v2 = v1) hull.erase(it);
+            else break;
+        }
+        auto it = hull.begin();
+        __int128 res = __int128(it-first)  x + it-second;
+        return (ll)res;  cast; ensure caller expects possible overflow handling
+    }
+
+    bool empty() const { return hull.empty(); }
+};
+
+
+ Example usage
+
+ ConvexHullDynamicMin cht;
+ cht.add_line(-1, 5);    y = -x + 5
+ cht.add_line(-2, 10);   y = -2x + 10
+ cout  cht.query(3)  n;  min value at x = 3
+
+
+
+signed main() {
+    Go();
+    int n;
+    cin  n;
+    vectorint a(n), b(n);
+    int idx = 0;
+    for (int i = n - 1; i = 0; i--)cin  a[i], idx += (a[i] == 1);
+    for (int i = n - 1; i = 0; i--)cin  b[i];
+    while (idx  1) {
+        idx -= (a.back() == 1);
+        a.pop_back();
+        b.pop_back();
+    }
+    reverse(a.begin(), a.end());
+    reverse(b.begin(), b.end());
+    vectorint dp(a.size(), 1e18);
+    dp[0] = 0;
+    ConvexHullDynamicMin cht;
+    cht.add_line(b.front(), 0);
+    for (int i = 1; i  a.size(); i++) {
+        int x = a[i];
+        dp[i]=cht.query(x);
+        int newM = b[i];
+        int newB = dp[i];
+        cht.add_line(newM,newB);
+    }
+    cout  dp.back()  endl;
+}

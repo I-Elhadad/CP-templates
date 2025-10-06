@@ -1,0 +1,153 @@
+typedef pair<ll, ll> Line;
+const ll NINF = -2e18;
+const ll PINF = 2e18;
+// change range according to constrains
+// depend on x values
+ int stRange = -1e9, enRange = 1e9;
+
+struct Node {
+    Node *left;
+    Node *right;
+    Line line = {0, NINF};
+
+    Node(Line line = {0, NINF}) {
+        this->line = line;
+        left = nullptr;
+        right = nullptr;
+    }
+};
+
+ll sub(Line line, int x) {
+    return (ll) line.first * x + line.second;
+}
+
+// --- rollback support ------------------------------------------------------
+struct Change {
+    // either ptr_change (where != nullptr) meaning *where should be restored to oldPtr
+    // or line_change (where == nullptr) meaning node->line should be restored to oldLine
+    Node **where;
+    Node *oldPtr;
+    Node *node;
+    Line oldLine;
+
+    Change(Node **_where, Node *_oldPtr) : where(_where), oldPtr(_oldPtr), node(nullptr), oldLine({0, NINF}) {
+    }
+
+    Change(Node *_node, Line _oldLine) : where(nullptr), oldPtr(nullptr), node(_node), oldLine(_oldLine) {
+    }
+};
+
+vector<Change> changes;
+
+inline size_t snapshot() { return changes.size(); }
+
+inline void rollback(size_t sz) {
+    while (changes.size() > sz) {
+        Change c = changes.back();
+        changes.pop_back();
+        if (c.where) {
+            // restore pointer
+            *c.where = c.oldPtr;
+        } else {
+            // restore node's line
+            c.node->line = c.oldLine;
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+
+void insert(Node *&cur, Line line, int st = stRange, int en = enRange) {
+    if (cur == nullptr) {
+        // record that cur pointer (i.e. &cur) was nullptr before allocation
+        changes.emplace_back(&cur, (Node *) nullptr);
+        cur = new Node(line);
+        return;
+    }
+    if (cur->line.first == line.first) {
+        // record old line before changing
+        changes.emplace_back(cur, cur->line);
+        cur->line.second = max(cur->line.second, line.second);
+        return;
+    }
+
+    int mid = st + (en - st) / 2;
+    ll curMid = sub(cur->line, mid);
+    ll newMid = sub(line, mid);
+    if (newMid > curMid) {
+        // record old line before swap
+        changes.emplace_back(cur, cur->line);
+        swap(cur->line, line); // now 'line' is the worse one to be pushed
+    }
+    if (st == en) return;
+
+    ll curL = sub(cur->line, st);
+    ll newL = sub(line, st);
+    if (newL > curL) {
+        insert(cur->left, line, st, mid);
+        return;
+    }
+
+    ll curR = sub(cur->line, en);
+    ll newR = sub(line, en);
+    if (newR > curR) {
+        insert(cur->right, line, mid + 1, en);
+    }
+}
+
+void insertInRange(int l, int r, Node *&cur, Line line, int st = stRange, int en = enRange) {
+    if (st > r || en < l) return;
+    int mid = st + (en - st) / 2;
+    if (cur == nullptr) {
+        // record pointer creation
+        changes.emplace_back(&cur, (Node *) nullptr);
+        cur = new Node({0, NINF});
+    }
+    if (l <= st && en <= r) {
+        insert(cur, line, st, en);
+    } else {
+        insertInRange(l, r, cur->left, line, st, mid);
+        insertInRange(l, r, cur->right, line, mid + 1, en);
+    }
+}
+
+ll query(int x, Node *&cur, int st = stRange, int en = enRange) {
+    if (cur == nullptr) return NINF;
+    if (x < st || x > en) return NINF;
+
+    auto ret = ((cur->line.second == NINF) ? NINF : sub(cur->line, x));
+    if (st == en) {
+        return ret;
+    }
+    int mid = st + (en - st) / 2;
+    if (x <= mid) {
+        ret = max(ret, query(x, cur->left, st, mid));
+    } else {
+        ret = max(ret, query(x, cur->right, mid + 1, en));
+    }
+    return ret;
+}
+
+Node *root;
+vector<vector<pair<int,int> > > adj;
+vector<int> wait, speed;
+vector<int> dp;
+int n;
+
+void solve(int node,int parent = -1,int dis = 0) {
+    int cur = snapshot();
+    int &ret = dp[node];
+    if (node) {
+        int x = speed[node];
+        ret = wait[node] + speed[node] * dis - query(x, root);
+    } else
+        ret = 0;
+    int m = -dis;
+    int b = dp[node];
+    insert(root, {-m, -b});
+    for (auto [child,c]: adj[node]) {
+        if (child == parent)continue;
+        solve(child, node, dis + c);
+    }
+    rollback(cur);
+}

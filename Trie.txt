@@ -1,0 +1,38 @@
+struct Trie
+{
+    struct trienode
+    {
+        trienode* child[26];
+        bool wordEnd;
+
+        trienode()
+        {
+            wordEnd=false;
+            for(auto &it:child)it= nullptr;
+        }
+
+    };
+    trienode* root=new trienode();
+    void insert(string s)
+    {
+        trienode* cur=root;
+        for(auto it:s)
+        {
+            if(cur->child[it-'a']== nullptr)
+
+                cur->child[it-'a']=new trienode () ;
+                cur=cur->child[it-'a'];
+        }
+        cur->wordEnd=true;
+    }
+    bool search(string s)
+    {
+        trienode*cur=root;
+        for(auto it:s)
+        {
+            if(cur->child[it-'a']== nullptr)return false;
+            cur=cur->child[it-'a'];
+        }
+        return cur->wordEnd;
+    }
+};

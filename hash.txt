@@ -1,0 +1,30 @@
+vector<int> bases = {27};
+const int base_sz=1;
+const int  N=1e5+1;
+vector<int> mods = {1000000007};
+int powers[base_sz][N];
+void pre() {
+    for (int i = 0; i < bases.size(); i++)
+        powers[i][0] = 1;
+    for (int i = 0; i < bases.size(); i++)
+        for (int j = 1; j < N; j++) {
+            powers[i][j] = powers[i][j - 1] * bases[i];
+            powers[i][j] %= mods[i];
+        }
+}
+int rhash[base_sz][N]{};
+void make(string &s)
+{
+    
+    rhash[0][0]=s.front()-'A'+1;
+
+    for(int i=1;i<s.size();i++)
+    {
+        rhash[0][i]=(rhash[0][i-1]*bases.front()+s[i]-'A'+1)%mods.front();
+    }
+}
+
+int get_rhash(int l,int r,int rhash[1][N])
+{
+    return ((rhash[0][r]-((l==0)?0:rhash[0][l-1]*powers[0][r-l+1]))%mods[0]+mods[0])%mods[0];
+}

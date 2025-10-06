@@ -1,0 +1,13 @@
+vector<ll> failure(vector<ll> &s) {
+    int n = s.size();
+    vector<ll> fail(n);
+    for (int i = 1; i < n; i++) {
+        int len = fail[i - 1];
+        while (len > 0 && s[i] != s[len])
+            len = fail[len - 1];
+        if (s[i] == s[len])
+            len++;
+        fail[i] = len;
+    }
+    return fail;
+}

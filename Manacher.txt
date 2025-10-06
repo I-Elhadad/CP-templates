@@ -1,0 +1,73 @@
+//    #pragma GCC optimize ("O3")
+//    #pragma GCC optimize ("unroll-loops")
+//    #pragma comment(linker, "/STACK:2000000")
+#include<bits/stdc++.h>
+
+using namespace std;
+#define ll long long
+// #define int ll
+#define ld long double
+#define  ui unsigned int
+#define endl "\n"
+#define FOCUS ios_base::sync_with_stdio(0);cin.tie(0);cout.tie(0);
+
+void Go() {
+    ios_base::sync_with_stdio(false), cin.tie(nullptr), cout.tie(nullptr);
+#ifndef ONLINE_JUDGE
+    freopen("input.txt", "r", stdin);
+    freopen("output.txt", "w", stdout);
+#endif
+}
+// run build(s);
+struct Manacher {
+    vector<int> p;
+
+    void runManacher(string s) {
+        int l = 1, r = 1;
+        int n = s.size();
+        p.assign(n, 1);
+        for (int i = 1; i < n; i++) {
+            p[i] = max(0, min(r - i, p[l + r - i]));
+            while (i + p[i] < n && i - p[i] >= 0 && s[i + p[i]] == s[i - p[i]]) {
+                p[i]++;
+            }
+            // #a#b#c#
+            if (i + p[i] > r) {
+                l = i - p[i];
+                r = i + p[i];
+            }
+        }
+    }
+
+    void build(string s) {
+        string t = "";
+        for (auto it: s) {
+            t += string("#") + it;
+        }
+        t += '#';
+        runManacher(t);
+    }
+    // odd equal 1 mean cen is center of palin (ODD LEN)
+    // odd equal 0 mean cen is  left center of palin (EVEN LEN)
+    int getLongest(int cen, bool odd) {
+        int pos = cen * 2 + 1 + (!odd);
+        return p[pos] - 1;
+    }
+
+    bool checkPalin(int l, int r) {
+        return (r - l + 1 <= getLongest((l + r) / 2, (l % 2 == r % 2)));
+    }
+} m;
+
+signed main() {
+    // Go();
+    FOCUS
+    string s;
+    cin>>s;
+    m.build(s);
+    for (int i=0;i<s.size();i++) {
+        cout<<m.getLongest(i,1)<<" ";
+        if (i+1!=s.size())
+            cout<<m.getLongest(i,0)<<" ";
+    }
+}

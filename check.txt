@@ -1,0 +1,7 @@
+bool check(ll row,ll col,ll n,ll m)
+{
+    if(col>=0&&row<n&&row>=0&&col<m)
+        return true;
+    else
+        return false;
+}

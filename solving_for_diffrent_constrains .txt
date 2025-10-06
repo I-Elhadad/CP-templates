@@ -1,0 +1,60 @@
+/*
+x ≤ y
+Difference form: x - y ≤ 0
+Graph edge: Add an edge from y to x with weight 0
+
+x < y
+Difference form: x - y ≤ -1
+Graph edge: Add an edge from y to x with weight -1
+
+x ≥ y
+Difference form: y - x ≤ 0
+Graph edge: Add an edge from x to y with weight 0
+
+x > y
+Difference form: y - x ≤ -1
+Graph edge: Add an edge from x to y with weight -1
+
+x = y
+Difference form: both x ≤ y and y ≤ x
+Graph edges: Add edges y → x and x → y, each with weight 0
+
+x ≠ y*
+Difference form: either x - y ≤ -1 or y - x ≤ -1
+Graph edge: Add one of the edges y → x or x → y with weight -1
+*/
+
+vector<int>solving_for_diffrent_constrains(int n,vector<array<int,3>>constrains)
+{
+// general rules
+/*
+a=b
+a   ----> b
+*/
+    vector<array<int,3>>edges;// first add ralations
+    for (auto [x1,x2,c]: constrains) {
+        //   x2-x1==c    ----><
+        // x2-x1>=c    ------> x1->x2 with c
+        // -x2+x1>=-c   ---->   x1-x2>=-c    x2->x1  with -c
+
+        edges.push_back({x1, x2, c});
+        edges.push_back({x2, x1, -c});
+    }
+
+    for (int i = 1; i <= n; i++) {
+        edges.push_back({i - 1, i, 1});
+    }
+    // base value is zero
+    second put base value and loop on number of nodes
+    vector<int> dis(n + 1, 0);
+    bool cyc=false;
+    for (int i = 0; i <= n; i++) {
+        for (auto [x,y,c]: edges) {
+            if (dis[y] < dis[x] + c) {
+                dis[y] = dis[x] + c;
+                if (i==n)cyc=true;
+            }
+        }
+    }
+
+}

@@ -1,0 +1,34 @@
+ll mod= 1e9+7;
+    ll fastPower(int a, int b) {
+        if(b==0) return 1;
+        ll ans = fastPower(a,b/2)%mod;
+        ans=(ans*ans)%mod;
+        if(b&1)
+            return (a*ans)%mod;
+        return ans;
+    }
+    ll fact[(ll)N+1];
+    ll inv[(ll)N+1];
+    ll npr(ll n,ll r)
+    {
+    if(n<r)
+    return 0;
+        return (fact[n]%mod * fastPower(fact[n-r],mod-2)%mod)%mod;
+    }
+    ll ncr(ll n,ll r)
+    {
+    if(n<r) return 0;
+    return ((fact[n]%mod * (inv[n-r]%mod*inv[r]%mod)%mod)%mod);
+    }
+    //main section
+    // ncr=!n/(!r*!(n-r))
+    //npr=!n/(!(n-r))
+    fact[0]=1;
+for(int i=1;i<=N;i++)
+{
+fact[i]=(fact[i-1]*i)%mod;
+}
+for(int i=0;i<=N;i++)
+{
+inv[i]= fastPower(fact[i],mod-2);
+}

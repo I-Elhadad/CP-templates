@@ -1,0 +1,51 @@
+//    #pragma GCC optimize ("O3")
+//    #pragma GCC optimize ("unroll-loops")
+//    #pragma comment(linker, "/STACK:2000000")
+#include<bits/stdc++.h>
+using namespace std;
+#define ll long long
+#define int long long
+#define ld long double
+#define endl "\n"
+#define FOCUS ios_base::sync_with_stdio(0);cin.tie(0);cout.tie(0);
+
+void Go() {
+    ios_base::sync_with_stdio(false), cin.tie(nullptr), cout.tie(nullptr);
+#ifndef ONLINE_JUDGE
+    freopen("input.txt", "r", stdin);
+    freopen("output.txt", "w", stdout);
+#endif
+}
+const ll  N=2e5+5;
+vector<int>adj[N];
+int dp[N];
+int computeGrundy(int x) {
+    if (x == 1 || adj[x].size() == 0) return 0; // Base case: Grundy number for a losing position is 0
+    int &ret = dp[x];
+    if (~ret) return ret;
+
+    vector<int> possibleMoves;
+    for (auto &i : adj[x]) {
+        assert(i != x);
+        possibleMoves.emplace_back(computeGrundy(i)); // Consider replacing x with divisor i
+    }
+
+    sort(possibleMoves.begin(), possibleMoves.end());
+    possibleMoves.erase(unique(possibleMoves.begin(), possibleMoves.end()), possibleMoves.end());
+
+    int mex = 0;
+    for (int move : possibleMoves) {
+        if (move == mex) {
+            mex++;
+        } else if (move > mex) {
+            break;
+        }
+    }
+
+    return ret = mex;
+}
+signed main() {
+    Go();
+
+    return 0;
+}

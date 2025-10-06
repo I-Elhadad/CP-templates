@@ -1,0 +1,17 @@
+vector<int> LIS(vector<int> &v) {
+    vector<int> lis(n);
+
+    vector<int> inc;
+
+    for (int i = 0; i < v.size(); ++i) {
+        if (!inc.size() || v[i] >= inc.back()) {
+            inc.push_back(v[i]);
+        } else {
+            inc[upper_bound(inc.begin(), inc.end(), v[i]) - inc.begin()] = v[i];
+        }
+
+        lis[i] = upper_bound(inc.begin(), inc.end(), v[i]) - inc.begin();
+    }
+
+    return lis;
+}

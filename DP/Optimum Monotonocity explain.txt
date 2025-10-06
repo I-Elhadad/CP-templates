@@ -1,0 +1,30 @@
+Idea in one sentence
+If the best choice index (argmin) for dp[h] never moves left as h increases, you can start the search for the optimum at the previous argmin instead of at 1, saving a lot of work.
+
+Why it helps
+Many DPs compute dp[h] = min_{1..h} cost(k,h). If opt(h) ≤ opt(h+1) (monotone argmin), you never need to try k values smaller than the previous best. That turns an O(H) inner scan into an amortized O(1) move of a pointer, reducing O(H^2) to about O(H).
+
+When it holds
+Monotone argmin appears when the cost function satisfies certain convexityMonge-type inequalities. The egg-dropping  balls-and-floors DP is one of those problems, so monotonicity is valid there.
+
+How to implement (pattern)
+For each fixed other parameter (e.g., number of balls b)
+
+Initialize a pointer k = 1.
+
+For h from 1 to H
+a) Move k forward while increasing k improves the dp value for this h.
+b) Use the current k as the optimal decision for dp[h].
+Because k only moves forward overall, each k increments at most H times across the loop.
+
+Numeric intuition
+If opt(10) = 3, then for h = 11 the optimal k cannot be 1 or 2 (because of monotonicity), so you only try 3, 4, ... — you never go back.
+
+Complexity
+Naive DP O(B  H^2).
+With monotone optimization about O(B  H) because each pointer move is done at most H times per b.
+
+Cautions
+• You must be sure monotonicity holds for your recurrence; if it doesn’t, this breaks correctness.
+• Use one pointer per fixed other-dimension (your code correctly uses k per b).
+• Be careful with boundary conditions and tie-breaking when testing “improves”.

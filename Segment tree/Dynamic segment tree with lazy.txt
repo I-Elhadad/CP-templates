@@ -1,0 +1,89 @@
+extern struct Node *const Empty;
+
+struct Node {
+    Node *left;
+    Node *right;
+    int val = 0;
+    int lazy = 0;
+
+    Node(int v) {
+        val = v;
+        left = Empty;
+        right = Empty;
+        lazy = 0;
+    }
+
+    Node() {
+        val = 0;
+        lazy = 0;
+        left = this;
+        right = this;
+    }
+};
+
+Node *const Empty = new Node(0);
+const int N = 2e5 + 5;
+
+void propagate(Node * &cur, int l, int r) {
+    if (!cur->lazy) {
+        return;
+    }
+    cur->val = r - l + 1;
+    if (l != r) {
+        Node *&left = cur->left;
+        Node *&right = cur->right;
+        if (left == Empty)left = new Node(0);
+        if (right == Empty)right = new Node(0);
+        left->lazy = 1;
+        right->lazy = 1;
+    }
+    cur->lazy = 0;
+}
+
+void add(int l, int r, int val, Node *&cur, int st = 0, int en = 1e9) {
+    if (l > r)return;
+    propagate(cur, st, en);
+
+    if (r < st || l > en)return;
+    if (cur == Empty)cur = new Node(0);
+    if (st >= l && en <= r) {
+        cur->lazy = 1;
+        propagate(cur, st, en);
+        return;
+    }
+    int mid = st+(en-st)/2;
+    add(l, r, val, cur->left, st, mid);
+    add(l, r, val, cur->right, mid + 1, en);
+    cur->val = (cur->left->val + cur->right->val);
+}
+
+int query(int l, int r, Node *&cur, int st = 0, int en = 1e9) {
+    if (l > r)return 0;
+    propagate(cur, st, en);
+    if (r < st || l > en)return 0;
+    if (cur == Empty)return 0;
+    if (st >= l && en <= r) {
+        return cur->val;
+    }
+    int mid = st+(en-st)/2;
+    return query(l, r, cur->left, st, mid) + query(l, r, cur->right, mid + 1, en);
+}
+signed main() {
+    FOCUS
+    int n;
+    cin >> n;
+    Node *root = Empty;
+    int C = 0;
+    for (int i = 0; i < n; i++) {
+        int op, l, r;
+        cin >> op >> l >> r;
+        l += C;
+        r += C;
+        if (op == 1) {
+            C = query(l, r, root);
+            cout << C << endl;
+        } else {
+            add(l, r, 1, root);
+        }
+    }
+}

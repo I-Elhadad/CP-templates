@@ -1,0 +1,74 @@
+struct item{
+    ll seg,pref,suf,sum;
+};
+struct segtree {
+    int sz;
+    vector<item> values;
+    item merge(item p1,item p2)
+    {
+        return {max({p1.seg,p2.seg,p1.suf+p2.pref}),max(p1.pref,p1.sum+p2.pref),max(p2.suf,p2.sum+p1.suf),p1.sum+p2.sum};
+    }
+    item natural={0,0,0,0};
+
+    void init(ll n) {
+        sz = 1;
+        while (sz < n)
+            sz *= 2;
+        values.resize(sz * 2 - 1);
+    }
+    item single(ll val)
+    {
+        if(val<0)return {0,0,0,val};
+        else
+            return {val,val,val,val};
+    }
+
+    void build(vector<ll> &v, ll pos, ll lx, ll rx) {
+        if (rx - lx == 0) {
+            if (lx < v.size())
+                values[pos] = single(v[lx]);
+            return;
+        }
+        ll mid = (lx + rx) / 2;
+        build(v, pos * 2 + 1, lx, mid);
+        build(v, pos * 2 + 2, mid + 1, rx);
+        values[pos] = merge(values[pos*2+1],values[pos*2+2]);
+    }
+
+    void build(vector<ll> &v) {
+        build(v, 0, 0, sz - 1);
+    }
+
+    void set(ll idx, ll val, ll pos, ll lx, ll rx) {
+        if (rx - lx == 0) {
+            values[pos] = single(val);
+            return;
+        }
+        ll mid = (lx + rx) / 2;
+        if (idx <= mid)
+            set(idx, val, pos * 2 + 1, lx, mid);
+        else
+            set(idx, val, pos * 2 + 2, mid + 1, rx);
+        values[pos] = merge(values[pos*2+1],values[pos*2+2]);
+    }
+
+    void set(ll idx, ll val) {
+        set(idx, val, 0, 0, sz - 1);
+    }
+
+    item calc(ll l, ll r, ll pos, ll lx, ll rx) {
+
+        if (r < lx || l > rx)return natural;
+        if (lx >= l && rx <= r)return values[pos];
+        ll mid = (lx + rx) / 2;
+        item s1 = calc (l, r, pos * 2 + 1, lx, mid);
+        item s2 = calc (l, r, pos * 2 + 2, mid + 1, rx);
+
+        return merge(s1 , s2);
+    }
+
+    item calc(ll l, ll r) {
+        return calc(l, r, 0, 0, sz - 1);
+    }
+
+};

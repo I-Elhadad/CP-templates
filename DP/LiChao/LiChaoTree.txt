@@ -1,0 +1,105 @@
+// change types according to problem
+typedef pair<int, ll> Line;
+const ll NINF = -2e18;
+const ll PINF = 2e18;
+// change range according to constrains
+const int stRange = -1e9, enRange = 1e9;
+struct Node {
+    Node *left;
+    Node *right;
+    Line line = {0, 0};
+
+    Node(Line line = {0, NINF}) {
+        this->line = line;
+        left = nullptr;
+        right = nullptr;
+    }
+};
+ll sub(Line line, int x) {
+    return (ll) line.first * x + line.second;
+}
+
+void insert(Node *&cur, Line line, int st = stRange, int en = enRange) {
+    if (cur == nullptr) {
+        cur = new Node(line);
+        return;
+    }
+    if (cur->line.first == line.first) {
+        cur->line.second = max(cur->line.second, line.second);
+        return;
+    }
+
+    int mid = st + (en - st) / 2;
+    ll curMid = sub(cur->line, mid);
+    ll newMid = sub(line, mid);
+    if (newMid > curMid) {
+        swap(cur->line, line); // now ln is the worse one to be pushed
+    }
+    if (st == en) return;
+
+    ll curL = sub(cur->line, st);
+    ll newL = sub(line, st);
+    if (newL > curL) {
+        insert(cur->left, line, st, mid);
+        return;
+    }
+
+    ll curR = sub(cur->line, en);
+    ll newR = sub(line, en);
+    if (newR > curR) {
+        insert(cur->right, line, mid + 1, en);
+    }
+}
+
+void insertInRange(int l, int r, Node *&cur, Line line, int st = stRange, int en = enRange) {
+    if (st > r || en < l)return;
+    int mid = st + (en - st) / 2;
+    if (cur == nullptr) {
+        cur = new Node({0, NINF});
+    }
+    if (l <= st && en <= r) {
+        insert(cur, line, st, en);
+    } else {
+        insertInRange(l, r, cur->left, line, st, mid);
+        insertInRange(l, r, cur->right, line, mid + 1, en);
+    }
+}
+
+ll query(int x, Node *&cur, int st = stRange, int en = enRange) {
+    if (cur == nullptr)return NINF;
+    if (x < st || x > en)return NINF;
+
+    auto ret = ((cur->line.second == NINF) ? NINF : sub(cur->line, x));
+    if (st == en) {
+        return ret;
+    }
+    int mid = st + (en - st) / 2;
+    if (x <= mid) {
+        ret = max(ret, query(x, cur->left, st, mid));
+    } else {
+        ret = max(ret, query(x, cur->right, mid + 1, en));
+    }
+    return ret;
+}
+
+signed main() {
+    Node *root = new Node();
+    int n, m;
+    cin >> n >> m;
+    // for min insert (-M,-b)
+    for (int i = 0; i < n; i++) {
+        ld x1, y1, x2, y2;
+        cin >> x1 >> y1 >> x2 >> y2;
+        ld M = (y2 - y1) / (x2 - x1);
+        ld b = y1 - x1 * M;
+        insertInRange(x1, x2, root, {M, b});
+    }
+    // for min take -query()
+    //  and make it >= PINF
+    for (int i = 0; i <= m; i++) {
+        if (query(i, root) <= NINF) {
+            cout << -1 << " ";
+        } else
+            cout << query(i, root) << " ";
+    }
+}

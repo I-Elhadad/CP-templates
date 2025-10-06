@@ -1,0 +1,8 @@
+int fastPower(int a, int b) {
+    if(b==0) return 1;
+    int ans = fastPower(a,b/2)%mod;
+    ans=(ans%mod*ans%mod)%mod;
+    if(b&1)
+        return (a*ans)%mod;
+    return ans;
+}

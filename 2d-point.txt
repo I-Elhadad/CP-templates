@@ -1,0 +1,661 @@
+#define ftype long double
+const long double EPS = 1e-9;
+const long double Pi = acos(-1);
+
+int dcmp(long double a, long double b) {
+    return fabs(a - b) <= EPS ? 0 : a < b ? -1 : 1;
+}
+
+struct point2d {
+    ftype x, y;
+
+    point2d() {}
+
+    point2d(ftype x, ftype y) : x(x), y(y) {}
+
+    bool operator<(const point2d &p) const {
+        return x < p.x - EPS || (abs(x - p.x) < EPS && y < p.y - EPS);
+    }
+
+    point2d &operator+=(const point2d &t) {
+        x += t.x;
+        y += t.y;
+        return *this;
+    }
+
+    point2d &operator-=(const point2d &t) {
+        x -= t.x;
+        y -= t.y;
+        return *this;
+    }
+
+    point2d &operator*=(ftype t) {
+        x *= t;
+        y *= t;
+        return *this;
+    }
+
+    bool operator==(const point2d &t) const {
+        return (x == t.x && y == t.y);
+    }
+
+    point2d &operator/=(ftype t) {
+        x /= t;
+        y /= t;
+        return *this;
+    }
+
+    point2d operator+(const point2d &t) const {
+        return point2d(*this) += t;
+    }
+
+    point2d operator-(const point2d &t) const {
+        return point2d(*this) -= t;
+    }
+
+    point2d operator*(ftype t) const {
+        return point2d(*this) *= t;
+    }
+
+    point2d operator/(ftype t) const {
+        return point2d(*this) /= t;
+    }
+};
+
+point2d operator*(ftype a, point2d b) {
+    return b * a;
+}
+
+struct point3d {
+    ftype x, y, z;
+
+    point3d() {}
+
+    point3d(ftype x, ftype y, ftype z) : x(x), y(y), z(z) {}
+
+    point3d &operator+=(const point3d &t) {
+        x += t.x;
+        y += t.y;
+        z += t.z;
+        return *this;
+    }
+
+    point3d &operator-=(const point3d &t) {
+        x -= t.x;
+        y -= t.y;
+        z -= t.z;
+        return *this;
+    }
+
+    point3d &operator*=(ftype t) {
+        x *= t;
+        y *= t;
+        z *= t;
+        return *this;
+    }
+
+    point3d &operator/=(ftype t) {
+        x /= t;
+        y /= t;
+        z /= t;
+        return *this;
+    }
+
+    point3d operator+(const point3d &t) const {
+        return point3d(*this) += t;
+    }
+
+    point3d operator-(const point3d &t) const {
+        return point3d(*this) -= t;
+    }
+
+    point3d operator*(ftype t) const {
+        return point3d(*this) *= t;
+    }
+
+    point3d operator/(ftype t) const {
+        return point3d(*this) /= t;
+    }
+};
+
+point3d operator*(ftype a, point3d b) {
+    return b * a;
+}
+
+ftype dot(point2d a, point2d b) {
+    return a.x * b.x + a.y * b.y;
+}
+
+ftype dot(point3d a, point3d b) {
+    return a.x * b.x + a.y * b.y + a.z * b.z;
+}
+
+point3d cross(point3d a, point3d b) {
+    return point3d(a.y * b.z - a.z * b.y,
+                   a.z * b.x - a.x * b.z,
+                   a.x * b.y - a.y * b.x);
+}
+
+ftype triple(point3d a, point3d b, point3d c) {
+    return dot(a, cross(b, c));
+}
+
+long long cross(point2d a, point2d b) {
+    return a.x * b.y - a.y * b.x;
+}
+
+long long cross(pair<ll, ll> a, pair<ll, ll> b) {
+    return a.first * b.second - a.second * b.first;
+}
+
+ftype squared(point2d x) {
+    return (x.x * x.x + x.y * x.y);
+}
+
+long double length(point2d x) {
+    return sqrtl(x.x * x.x + x.y * x.y);
+}
+
+ftype getLength(point2d a, point2d b) {
+    return sqrtl((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
+}
+
+bool cmp(point2d &a, point2d &b) {
+    return atan2l(a.y, a.x) < atan2l(b.y, b.x);
+}
+
+
+struct circle {
+    point2d center;
+    long double radius;
+    long double pi = acos(-1);
+
+    circle(point2d c, long double rad) {
+        center = c;
+        radius = rad;
+
+    }
+
+    long double get_Circumference() {
+        return (2 * pi * radius);
+    }
+
+    long double get_Area() {
+        return (pi * radius * radius);
+    }
+};
+
+struct line {
+    long double a, b, c;
+
+    line() {}
+
+    line(point2d p, point2d q) {
+        a = p.y - q.y;
+        b = q.x - p.x;
+        c = -a * p.x - b * p.y;
+        // norm();
+    }
+
+    void norm() {
+        double z = sqrt(a * a + b * b);
+        if (abs(z) > EPS)
+            a /= z, b /= z, c /= z;
+    }
+
+    long double dist(point2d p) const { return a * p.x + b * p.y + c; }
+};
+
+
+double det(double a, double b, double c, double d) {
+    return a * d - b * c;
+}
+
+bool intersect(line m, line n, point2d &res) {
+    double zn = det(m.a, m.b, n.a, n.b);
+    if (abs(zn) < EPS)
+        return false;
+    res.x = -det(m.c, m.b, n.c, n.b) / zn;
+    res.y = -det(m.a, m.c, n.a, n.c) / zn;
+    return true;
+}
+
+bool parallel(line m, line n) {
+    return abs(det(m.a, m.b, n.a, n.b)) < EPS;
+}
+
+bool equivalent(line m, line n) {
+    return abs(det(m.a, m.b, n.a, n.b)) < EPS
+           && abs(det(m.a, m.c, n.a, n.c)) < EPS
+           && abs(det(m.b, m.c, n.b, n.c)) < EPS;
+}
+
+inline bool intersect_1d(double a, double b, double c, double d) {
+    if (a > b)
+        swap(a, b);
+    if (c > d)
+        swap(c, d);
+    return max(a, c) <= min(b, d) + EPS;
+}
+
+inline bool betw(double l, double r, double x) {
+    return min(l, r) <= x + EPS && x <= max(l, r) + EPS;
+}
+
+bool intersect(point2d a, point2d b, point2d c, point2d d, point2d &left, point2d &right) {
+    if (!intersect_1d(a.x, b.x, c.x, d.x) || !intersect_1d(a.y, b.y, c.y, d.y))
+        return false;
+    line m(a, b);
+    line n(c, d);
+    double zn = det(m.a, m.b, n.a, n.b);
+    if (abs(zn) < EPS) {
+        if (abs(m.dist(c)) > EPS || abs(n.dist(a)) > EPS)
+            return false;
+        if (b < a)
+            swap(a, b);
+        if (d < c)
+            swap(c, d);
+        left = max(a, c);
+        right = min(b, d);
+        return true;
+    } else {
+        left.x = right.x = -det(m.c, m.b, n.c, n.b) / zn;
+        left.y = right.y = -det(m.a, m.c, n.a, n.c) / zn;
+        return betw(a.x, b.x, left.x) && betw(a.y, b.y, left.y) &&
+               betw(c.x, d.x, left.x) && betw(c.y, d.y, left.y);
+    }
+}
+
+double pointLineDistance(point2d c, point2d a, point2d b) {
+    double dist = cross(c - a, b - a) / getLength(a, b);
+    return fabs(dist);
+}
+
+void getTwoPointes(double a, double b, double c, point2d &fir, point2d &sec) {
+    if (a == 0) {
+        fir.y = -c / b;
+        fir.x = 0;
+        sec.y = -c / b;
+        sec.x = 1;
+    } else if (b == 0) {
+        fir.y = 0;
+        fir.x = -c / a;
+        sec.y = 1;
+        sec.x = -c / a;
+    } else {
+        fir.y = 0;
+        fir.x = (-c) / a;
+        sec.y = 1;
+        sec.x = (-c - (b)) / a;
+    }
+}
+
+double pointSegmentDistance(point2d p, point2d fir, point2d sec) {
+    if (dot(p - fir, sec - fir) >= 0 && dot(p - sec, fir - sec) >= 0)
+        return pointLineDistance(p, fir, sec);
+    else {
+        return min(getLength(fir, p), getLength(sec, p));
+    }
+}
+
+bool onSegment(point2d p, point2d q, point2d r) {
+    return (q.x <= max(p.x, r.x) && q.x >= min(p.x, r.x) &&
+            q.y <= max(p.y, r.y) && q.y >= min(p.y, r.y));
+}
+
+bool segmentIntersect(point2d a, point2d b, point2d c, point2d d) {
+    // Check for regular intersection
+    ftype d1 = cross(b - a, c - a);
+    ftype d2 = cross(b - a, d - a);
+    ftype d3 = cross(d - c, a - c);
+    ftype d4 = cross(d - c, b - c);
+
+    // If the segments cross each other
+    if (((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0)) &&
+        ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0)))
+        return true;
+
+    // Special cases - collinear points and overlapping
+    if (d1 == 0 && onSegment(a, c, b)) return true;
+    if (d2 == 0 && onSegment(a, d, b)) return true;
+    if (d3 == 0 && onSegment(c, a, d)) return true;
+    if (d4 == 0 && onSegment(c, b, d)) return true;
+
+    return false;
+}
+
+long double areaOfPolygon(const vector<point2d> &polygon) {
+    long long area = 0;
+    int n = polygon.size();
+    for (int i = 0; i < n; i++) {
+        long long x1 = polygon[i].x;
+        long long y1 = polygon[i].y;
+        long long x2 = polygon[(i + 1) % n].x;
+        long long y2 = polygon[(i + 1) % n].y;
+        area += (x1 * y2) - (x2 * y1);
+    }
+    return (long double) area / 2.0;
+}
+
+circle getCircle(point2d a, point2d b, point2d c) {
+    point2d fir = b - a;
+    point2d sec = c - a;
+    point2d firper(-fir.y, fir.x);
+    point2d secper(-sec.y, sec.x);
+
+    point2d m1 = point2d((a.x + b.x) / 2, (a.y + b.y) / 2);
+    point2d m2 = point2d((a.x + c.x) / 2, (a.y + c.y) / 2);
+    line l1(m1, m1 + firper);
+    line l2(m2, m2 + secper);
+    point2d cen;
+    intersect(l1, l2, cen);
+    return circle(cen, getLength(cen, a));
+
+}
+
+long double triangleAreaBySides(long double a, long double b, long double c) {
+    long double half = (a + b + c) / 2;
+    return (sqrtl(half * (half - a) * (half - b) * (half - c)));
+}
+
+long double getInCircleArea(long double a, long double b, long double c) {
+    long double half = (a + b + c) / 2;
+    long double radius = triangleAreaBySides(a, b, c) / half;
+    return (Pi * radius * radius);
+
+}
+
+long double getCircumcircleArea(long double a, long double b, long double c) {
+    long double triArea = triangleAreaBySides(a, b, c);
+    long double radius = (a * b * c) / (4 * triArea);
+    return (Pi * radius * radius);
+
+}
+
+bool doCirclesIntersect(circle c1, circle c2) {
+    long double dist = getLength(c1.center, c2.center);
+    long double r1 = c1.radius;
+    long double r2 = c2.radius;
+    // same circles
+    if (c1.radius == c2.radius && c1.center.x == c2.center.x && c1.center.y == c2.center.y)
+        return true;
+    // single point on a circle
+    if ((c1.radius == 0 && getLength(c1.center, c2.center) <= c2.radius) ||
+        (c2.radius == 0 && getLength(c2.center, c1.center) <= c1.radius))
+        return true;
+    // inner touch
+    if (abs(r1 - r2) == dist)
+        return true;
+    // inner and don't tocuh but have common area
+    if (abs(r1 - r2) > dist)
+        return true;
+    // disjoint
+    if (r1 + r2 < dist)
+        return false;
+    // touch in outer single point
+    if (r1 + r2 == dist)
+        return true;
+    // intersect in two outer points
+    if (r1 + r2 > dist)
+        return true;
+
+
+}
+
+long long sqr(long long a) {
+    return a * a;
+}
+
+void tangents(point2d c, double r1, double r2, vector<line> &ans) {
+    long double r = r2 - r1;
+    long double z = sqr(c.x) + sqr(c.y);
+    long double d = z - sqr(r);
+    if (d < -EPS) return;
+    d = sqrt(abs(d));
+    line l;
+    l.a = (c.x * r + c.y * d) / z;
+    l.b = (c.y * r - c.x * d) / z;
+    l.c = r1;
+    ans.push_back(l);
+}
+
+vector<line> tangents(circle a, circle b) {
+    vector<line> ans;
+    for (int i = -1; i <= 1; i += 2)
+        for (int j = -1; j <= 1; j += 2)
+            tangents(b.center - a.center, a.radius * i, b.radius * j, ans);
+    for (size_t i = 0; i < ans.size(); ++i)
+        ans[i].c -= ans[i].a * a.center.x + ans[i].b * a.center.y;
+    return ans;
+}
+
+double sqr(double a) {
+    return a * a;
+}
+
+point2d calculatePolygonCentroid(const std::vector<point2d> &vertices) {
+    int n = vertices.size();
+
+    // Handle edge cases
+    if (n == 0) return point2d(0, 0);
+    if (n == 1) return vertices[0];
+    if (n == 2)
+        return point2d((vertices[0].x + vertices[1].x) / 2,
+                       (vertices[0].y + vertices[1].y) / 2);
+
+    double area = 0.0;
+    double cx = 0.0;
+    double cy = 0.0;
+
+    // Calculate the centroid using the formula for the centroid of a polygon
+    for (int i = 0; i < n; i++) {
+        int j = (i + 1) % n;
+        double cross = vertices[i].x * vertices[j].y - vertices[j].x * vertices[i].y;
+        area += cross;
+        cx += (vertices[i].x + vertices[j].x) * cross;
+        cy += (vertices[i].y + vertices[j].y) * cross;
+    }
+
+    // Finish the area calculation
+    area = area / 2.0;
+
+    // If area is zero or very close to zero, fall back to arithmetic mean
+    if (std::abs(area) < 1e-10) {
+        cx = 0.0;
+        cy = 0.0;
+        for (const auto &p: vertices) {
+            cx += p.x;
+            cy += p.y;
+        }
+        return point2d(cx / n, cy / n);
+    }
+
+    // The signed area might be negative if the polygon's vertices are given in
+    // clockwise order, so we take the absolute value
+    double signedArea = area;
+    area = std::abs(area);
+
+    // Finish the centroid calculation
+    cx = cx / (6.0 * signedArea);
+    cy = cy / (6.0 * signedArea);
+
+    return point2d(cx, cy);
+}
+
+// Alternative function for the simple averaging method
+// Works well for convex and regular polygons
+point2d calculateVertexCentroid(const std::vector<point2d> &vertices) {
+    int n = vertices.size();
+    if (n == 0) return point2d(0, 0);
+
+    double cx = 0.0;
+    double cy = 0.0;
+
+    for (const auto &p: vertices) {
+        cx += p.x;
+        cy += p.y;
+    }
+
+    return point2d(cx / n, cy / n);
+}
+
+int orientation(point2d a, point2d b, point2d c) {
+    double v = a.x * (b.y - c.y) + b.x * (c.y - a.y) + c.x * (a.y - b.y);
+    if (v < 0) return -1; // clockwise
+    if (v > 0) return +1; // counter-clockwise
+    return 0;
+}
+
+bool cw(point2d a, point2d b, point2d c, bool include_collinear) {
+    int o = orientation(a, b, c);
+    return o < 0 || (include_collinear && o == 0);
+}
+
+bool collinear(point2d a, point2d b, point2d c) { return orientation(a, b, c) == 0; }
+
+void convex_hull(vector<point2d> &a, bool include_collinear = false) {
+    point2d p0 = *min_element(a.begin(), a.end(), [](point2d a, point2d b) {
+        return make_pair(a.y, a.x) < make_pair(b.y, b.x);
+    });
+    sort(a.begin(), a.end(), [&p0](const point2d &a, const point2d &b) {
+        int o = orientation(p0, a, b);
+        if (o == 0)
+            return (p0.x - a.x) * (p0.x - a.x) + (p0.y - a.y) * (p0.y - a.y)
+                   < (p0.x - b.x) * (p0.x - b.x) + (p0.y - b.y) * (p0.y - b.y);
+        return o < 0;
+    });
+    if (include_collinear) {
+        int i = (int) a.size() - 1;
+        while (i >= 0 && collinear(p0, a[i], a.back())) i--;
+        reverse(a.begin() + i + 1, a.end());
+    }
+
+    vector<point2d> st;
+    for (int i = 0; i < (int) a.size(); i++) {
+        while (st.size() > 1 && !cw(st[st.size() - 2], st.back(), a[i], include_collinear))
+            st.pop_back();
+        st.push_back(a[i]);
+    }
+
+    if (include_collinear == false && st.size() == 2 && st[0] == st[1])
+        st.pop_back();
+
+    a = st;
+}
+
+int regularPolgonAngle(int n) {
+    return (((n - 2) * 180) / n);
+}
+
+long double getDoublePolygonArea(vector<point2d> points) {
+    long double area = 0;
+    for (int i = 0; i < points.size() - 1; i++)
+        area += cross(points[i], points[i + 1]);
+    area += cross(points[points.size() - 1], points[0]);
+    return abs(area) / 2;
+}
+
+bool lineSegmentIntersection(
+        const point2d &linePt1,
+        const point2d &linePt2,
+        const point2d &segPt1,
+        const point2d &segPt2,
+        point2d &intersectionPt
+) {
+    double A1 = linePt2.y - linePt1.y;
+    double B1 = linePt1.x - linePt2.x;
+    double C1 = A1 * linePt1.x + B1 * linePt1.y;
+
+    double A2 = segPt2.y - segPt1.y;
+    double B2 = segPt1.x - segPt2.x;
+    double C2 = A2 * segPt1.x + B2 * segPt1.y;
+
+    double det = A1 * B2 - A2 * B1;
+
+    if (fabs(det) < 1e-10) {
+        // Lines are parallel
+        return false;
+    }
+
+    // Find intersection point
+    intersectionPt.x = (B2 * C1 - B1 * C2) / det;
+    intersectionPt.y = (A1 * C2 - A2 * C1) / det;
+
+    // Check if the intersection point lies on the segment
+    return onSegment(segPt1, segPt2, intersectionPt);
+}
+
+pair<vector<point2d>, vector<point2d>> polygonCut(
+        const vector<point2d> &p,
+        const point2d &A, const point2d &B
+) {
+    vector<point2d> left, right;
+    point2d I;
+    auto push_if_new = [&](vector<point2d> &v, const point2d &pt) {
+        if (v.empty() || !(pt == v.back()))
+            v.push_back(pt);
+    };
+    auto clean = [&](vector<point2d> &v) {
+        if (v.size() < 2) return;
+        if (v.front() == v.back()) v.pop_back();
+        vector<point2d> tmp;
+        tmp.reserve(v.size());
+        tmp.push_back(v[0]);
+        for (size_t i = 1; i < v.size(); ++i) {
+            if (!(v[i] == tmp.back())) tmp.push_back(v[i]);
+        }
+        v.swap(tmp);
+    };
+
+    for (size_t i = 0; i < p.size(); ++i) {
+        const point2d &cur = p[i];
+        const point2d &nxt = p[(i + 1) % p.size()];
+        if (cross(B - A, cur - A) >= 0)
+            push_if_new(right, cur);
+        if (cross(B - A, cur - A) <= 0)
+            push_if_new(left, cur);
+        if (lineSegmentIntersection(A, B, cur, nxt, I)) {
+            push_if_new(right, I);
+            push_if_new(left, I);
+        }
+    }
+
+    clean(left);
+    clean(right);
+    return {left, right};
+}
+
+bool isPointOnSegment(point2d a, point2d b, point2d c) {
+    long double acb = length(a - b), ac = length(a - c), cb = length(b - c);
+    return ((dcmp(acb - (ac + cb), 0)) == 0);
+}
+
+// Accurate and efficient
+int isInsidePoly(vector<point2d> p, point2d p0) {
+    int wn = 0;  // the winding number counter
+
+    for (int i = 0; i < p.size(); i++) {
+        point2d cur = p[i], nxt = p[(i + 1) % (int) (p.size())];
+        if (isPointOnSegment(cur, nxt, p0))
+            return true;
+        if (cur.y <= p0.y) {    // Upward edge
+            if (nxt.y > p0.y && cross(nxt - cur, p0 - cur) > EPS)
+                ++wn;
+        } else {                // Downward edge
+            if (nxt.y <= p0.y && cross(nxt - cur, p0 - cur) < -EPS)
+                --wn;
+        }
+    }
+    return wn != 0;
+}
+
+long long n, m;
+
+bool comp(pair<ld, ld> a, pair<ld, ld> b) {
+    int best_fit1 = n / 2 - 1;
+    if (a.first > a.second)swap(a.first, a.second);
+    if (b.first > b.second)swap(b.first, b.second);
+    int diff1 = min(abs(best_fit1 - abs(a.second - a.first) - 1), abs(best_fit1 - (n - a.second - 1 + a.first)));
+    int diff2 = min(abs(best_fit1 - abs(b.second - b.first) - 1), abs(best_fit1 - (n - b.second - 1 + b.first)));
+    return (diff1 < diff2);
+}

@@ -1,0 +1,72 @@
+struct DSU {  
+    vector<int> size, parent;  
+    vector<long long> sum;  
+  
+    struct details {  
+        int parent, child;  
+        int pSum, cSum, pSize, cSize;  
+        int componentsSize;  
+    };  
+    stack<details> operations;  
+    int components;  
+    DSU(int n) {  
+        size.resize(n + 1, 1);  
+        sum.resize(n + 1);  
+        parent.resize(n * 1 + 1);  
+        for (int i = 0; i <= n; i++) {  
+            parent[i] = i, sum[i] = i;  
+        }  
+        components = n;  
+    }  
+    int getParentWithRollback(int x) {  
+        if (x == parent[x])return x;  
+        return getParentWithRollback(parent[x]);  
+    }  
+    void connectWithRollback(ll x, ll y) {  
+        int px = getParentWithRollback(x), py = getParentWithRollback(y);  
+        if (px == py) {  
+            operations.push(  
+                {py, px, sum[py], sum[px], size[py], size[px], components}  
+            );  
+            return;  
+        }  
+        if (size[px] > size[py])swap(px, py);  
+        operations.push(  
+            {py, px, sum[py], sum[px], size[py], size[px], components}  
+        );  
+        parent[px] = py;  
+        size[py] += size[px];  
+        sum[py] += sum[px];  
+        components--;  
+    }  
+    bool connectedWithRollBack(int x, int y) {  
+        int px = getParentWithRollback(x), py = getParentWithRollback(y);  
+        return (px==py);  
+    }  
+  
+    void rollback(int steps) {  
+        while (operations.size() && steps--) {  
+            auto [p,c,psum,csum,psize,csize,comps] = operations.top();  
+            operations.pop();  
+            parent[c] = c;  
+            sum[p] = psum;  
+            sum[c] = csum;  
+            size[p] = psize;  
+            size[c] = csize;  
+            components = comps;  
+        }  
+    }  
+  
+    void clear() {  
+        while (operations.size()) {  
+            auto [p,c,psum,csum,psize,csize,comps] = operations.top();  
+            operations.pop();  
+            parent[c] = c;  
+            sum[p] = psum;  
+            sum[c] = csum;  
+            size[p] = psize;  
+            size[c] = csize;  
+            components = comps;  
+        }  
+    }  
+};

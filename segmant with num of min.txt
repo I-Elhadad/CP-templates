@@ -1,0 +1,68 @@
+struct segtree {
+    int sz;
+    vector<pair<ll,ll>> values;
+    pair<ll,ll>merge(pair<ll,ll>p1,pair<ll,ll>p2)
+    {
+        if(p1.first<p2.first)
+            return p1;
+        if(p2.first<p1.first)
+            return p2;
+        return {p1.first,p1.second+p2.second};
+    }
+
+    void init(ll n) {
+        sz = 1;
+        while (sz < n)
+            sz *= 2;
+        values.resize(sz * 2 - 1);
+    }
+
+    void build(vector<ll> &v, ll pos, ll lx, ll rx) {
+        if (rx - lx == 0) {
+            if (lx < v.size())
+                values[pos] = {v[lx],1};
+            return;
+        }
+        ll mid = (lx + rx) / 2;
+        build(v, pos * 2 + 1, lx, mid);
+        build(v, pos * 2 + 2, mid + 1, rx);
+        values[pos] = merge(values[pos*2+1],values[pos*2+2]);
+    }
+
+    void build(vector<ll> &v) {
+        build(v, 0, 0, sz - 1);
+    }
+
+    void set(ll idx, ll val, ll pos, ll lx, ll rx) {
+        if (rx - lx == 0) {
+            values[pos] = {val,1};
+            return;
+        }
+        ll mid = (lx + rx) / 2;
+        if (idx <= mid)
+            set(idx, val, pos * 2 + 1, lx, mid);
+        else
+            set(idx, val, pos * 2 + 2, mid + 1, rx);
+        values[pos] = merge(values[pos*2+1],values[pos*2+2]);
+    }
+
+    void set(ll idx, ll val) {
+        set(idx, val, 0, 0, sz - 1);
+    }
+
+    pair<ll,ll> sum(ll l, ll r, ll pos, ll lx, ll rx) {
+
+        if (r < lx || l > rx)return {2e9,0};
+        if (lx >= l && rx <= r)return values[pos];
+        ll mid = (lx + rx) / 2;
+        pair<ll,ll> s1 = sum(l, r, pos * 2 + 1, lx, mid);
+        pair<ll,ll> s2 = sum(l, r, pos * 2 + 2, mid + 1, rx);
+
+        return merge(s1 , s2);
+    }
+
+    pair<ll,ll> sum(ll l, ll r) {
+        return sum(l, r, 0, 0, sz - 1);
+    }
+
+};

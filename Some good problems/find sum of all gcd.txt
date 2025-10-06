@@ -1,0 +1,77 @@
+// Given a number n, find sum of all [GCD] that can be formed by selecting all the pairs from 1 to n.
+
+/*
+Sum of all GCDs where j is a part of the pair and j is the greater element in the pair:
+Sum_j = sum from i = 1 to j - 1 of gcd(i, j)
+
+Our final result is:
+Result = sum from j = 1 to N of Sum_j
+
+The above equation can be written as:
+Sum_j = sum over g of (g * count(g))
+
+For every possible GCD 'g' of j. Here, count(g) represents the count of pairs having GCD equal to g.
+For every such pair (i, j), we can write: gcd(i/g, j/g) = 1
+
+We can rewrite our previous equation as:
+Sum_j = sum over d of (d * phi(j/d))
+
+For every divisor d of j, and phi[] is the Euler Totient function.
+*/
+
+//    #pragma GCC optimize ("O3")  
+//    #pragma GCC optimize ("unroll-loops")  
+//    #pragma comment(linker, "/STACK:2000000")  
+#include<bits/stdc++.h>  
+  
+using namespace std;  
+#define int long long  
+  
+#define ll long long  
+//#define int long long  
+#define ld long double  
+#define endl "\n"  
+#define FOCUS ios_base::sync_with_stdio(0);cin.tie(0);cout.tie(0);  
+  
+void Go() {  
+    ios_base::sync_with_stdio(false), cin.tie(nullptr), cout.tie(nullptr);  
+#ifndef ONLINE_JUDGE  
+    freopen("input.txt", "r", stdin);  
+    freopen("output.txt", "w", stdout);  
+#endif  
+}  
+vector<int> Phi(int n) {  
+    vector<int> phi(n + 1);  
+    for (int i = 0; i <= n; i++)phi[i] = i;  
+    for (int i = 2; i <= n; i++) {  
+        if (phi[i] == i) {  
+            for (int j = i; j <= n; j += i) {  
+                phi[j] -= phi[j] / i;  
+            }  
+        }  
+    }  
+    return phi;  
+}  
+  
+signed main() {  
+//    Go();  
+FOCUS  
+    int N=1000001;  
+    auto phi = Phi(N);  
+    vector<ll>ans(N+1);  
+    for(int i=1;i<=N;i++)  
+    {  
+        for(int j=i+i;j<=N;j+=i)  
+        {  
+            ans [j]+=i*phi[j/i];  
+        }  
+    }  
+    for(int i=1;i<=N;i++)ans[i]+=ans[i-1];  
+    int n;  
+    while (cin>>n&&n)  
+    {  
+        cout<<ans[n]<<endl;  
+    }  
+  
+    return 0;  
+}

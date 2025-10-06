@@ -1,0 +1,16 @@
+// k=number of terms
+// n=addition term
+// i=current term
+/*2 ^ i + 2 ^ (i + n) + 2 ^ (i + 2 * n) + … + 2 ^ (i + (k – 1) * n)
+->S = (2^i) * (2 ^ ((k) * n) – 1) / (2 ^ n – 1).
+*/
+int sum_of_geometric_series(int k,int n,int i)
+{
+
+    int first= fastPower(2,i);
+    int sec= fastPower(2,(k)*n)-1;
+    int third= fastPower(2,n)-1;
+    int ans=(first*sec)%mod* fastPower(third,mod-2);
+    ans%=mod;
+    return ans;
+}

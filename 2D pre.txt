@@ -1,0 +1,43 @@
+ll n,m;
+short pref[101][101];
+void pre_fref()
+{
+    for(short i=1;i<=n;i++)
+    {
+        for(short j=1;j<=m;j++)
+        {
+            cin>>pref[i][j];
+        }
+    }
+    for(int i=1;i<=n;i++)
+    {
+        for(int j=1;j<=m;j++)
+            pref[i][j]+=pref[i][j-1];
+    }
+    for(int i=1;i<=m;i++)
+    {
+        for(int j=1;j<=n;j++)
+            pref[j][i]+=pref[j-1][i];
+    }
+    for(short i=1;i<=n;i++)
+    {
+        for(short j=1;j<=m;j++)
+        {
+            for(short w=i;w<=n;w++)
+            {
+                for(short f=j;f<=m;f++)
+                {
+                    if(fun(w,f,i,j)<=k)
+                    {
+                        if((w-i+1)*(f-j+1)>ans)ans=(w-i+1)*(f-j+1);
+                    }
+                }
+            }
+        }
+    }
+}
+short fun(short to_row, short to_col, short from_row, short from_col) {
+    return pref[to_row][to_col] - pref[from_row - 1][to_col] -
+           pref[to_row][from_col - 1] +
+           pref[from_row - 1][from_col - 1];
+}

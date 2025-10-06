@@ -1,0 +1,41 @@
+const int N = 2e6;
+
+struct BIT {
+    vector<int> bits, bitsRange;
+
+    BIT() {
+        bits = vector<int>(N);
+        bitsRange = vector<int>(N);
+    }
+
+private:
+    void add(int i, int val, vector<int> &bit) {
+        for (++i; i < N; i = i + (i & -i)) {
+            bit[i - 1] += val;
+        }
+    }
+
+public:
+    void rangeAdd(int l,int r,int x) {
+        add(l, x, bits);
+        add(r + 1, -x, bits);
+        add(l, x * (l - 1), bitsRange);
+        add(r + 1, -x * r, bitsRange);
+    }
+
+    int sum(vector<int> &bit,int i) {
+        int sum = 0;
+        for (++i; i; i = i - (i & -i)) {
+            sum += bit[i - 1];
+        }
+        return sum;
+    }
+
+    int preifxSum(int i) {
+        return sum(bits, i) * i - sum(bitsRange, i);
+    }
+
+    int rangeSum(int l,int r) {
+        return preifxSum(r) - preifxSum(l - 1);
+    }
+} bit;
