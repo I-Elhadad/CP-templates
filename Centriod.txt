@@ -1,0 +1,51 @@
+const int N = 2e5 + 5;
+vector<int> cenPar(N);
+vector<int> treeSize(N);
+vector<int> done(N);
+vector<vector<int> > adj(N);
+int tot = 0;
+
+void calcSize(int node, int par) {
+    treeSize[node] = 1;
+    tot++;
+    for (auto child: adj[node]) {
+        if (child == par || done[child])continue;
+        calcSize(child, node);
+        treeSize[node] += treeSize[child];
+    }
+}
+
+int getCen(int node, int par) {
+    for (auto child: adj[node]) {
+        if (child == par || done[child])continue;
+        if (treeSize[child] > tot / 2) {
+            return getCen(child, node);
+        }
+    }
+    return node;
+}
+
+void decompose(int node = 0, int par = -1) {
+    tot = 0;
+    calcSize(node, par);
+    int cen = getCen(node, par);
+    cenPar[cen] = par;
+    done[cen] = true;
+    for (auto child: adj[cen]) {
+        if (child == par || done[child])continue;
+        decompose(child, cen);
+    }
+}
+
+signed main() {
+    int n;
+    cin >> n;
+    for (int i = 0; i < n - 1; i++) {
+        int x, y;
+        cin >> x >> y;
+        x--, y--;
+        adj[x].push_back(y);
+        adj[y].push_back(x);
+    }
+    decompose(0, -1);
+}

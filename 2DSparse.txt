@@ -1,0 +1,72 @@
+template<typename T>
+struct SparseTable2D {
+    int n, m, Kx, Ky;
+    vector<int> lg;
+    vector<vector<vector<vector<T> > > > st;
+    T identity; // identity element
+
+    // constructor
+    SparseTable2D(const vector<vector<T> > &a, T identity_ = T())
+        : identity(identity_) {
+        n = a.size();
+        m = n ? a[0].size() : 0;
+        if (n == 0 || m == 0) return;
+
+        int maxdim = max(n, m) + 1;
+        lg.assign(maxdim + 1, 0);
+        for (int i = 2; i <= maxdim; ++i) lg[i] = lg[i >> 1] + 1;
+
+        Kx = lg[n] + 1;
+        Ky = lg[m] + 1;
+
+        st.assign(Kx, vector<vector<vector<T> > >(Ky,
+                                                  vector<vector<T> >(n, vector<T>(m, identity))));
+
+        // base level
+        for (int i = 0; i < n; ++i)
+            for (int j = 0; j < m; ++j)
+                st[0][0][i][j] = a[i][j];
+
+        // build along columns
+        for (int ky = 1; ky < Ky; ++ky) {
+            int len = 1 << (ky - 1);
+            for (int i = 0; i < n; ++i)
+                for (int j = 0; j + (1 << ky) - 1 < m; ++j)
+                    st[0][ky][i][j] = merge(st[0][ky - 1][i][j], st[0][ky - 1][i][j + len]);
+        }
+
+        // build for higher kx
+        for (int kx = 1; kx < Kx; ++kx) {
+            int lenx = 1 << (kx - 1);
+            for (int ky = 0; ky < Ky; ++ky)
+                for (int i = 0; i + (1 << kx) - 1 < n; ++i)
+                    for (int j = 0; j + (1 << ky) - 1 < m; ++j)
+                        st[kx][ky][i][j] = merge(st[kx - 1][ky][i][j],
+                                                 st[kx - 1][ky][i + lenx][j]);
+        }
+    }
+
+    //  Merge function (EDIT this to change operation)
+    virtual T merge(const T &a, const T &b) const {
+        return a | b; // default is bitwise OR
+    }
+
+    T query(int x1, int y1, int x2, int y2) const {
+        if (x1 > x2 || y1 > y2) return identity;
+        int kx = lg[x2 - x1 + 1];
+        int ky = lg[y2 - y1 + 1];
+        int sx = 1 << kx;
+        int sy = 1 << ky;
+        int x2s = x2 - sx + 1;
+        int y2s = y2 - sy + 1;
+        T a = merge(st[kx][ky][x1][y1], st[kx][ky][x1][y2s]);
+        T b = merge(st[kx][ky][x2s][y1], st[kx][ky][x2s][y2s]);
+        return merge(a, b);
+    }
+};
+/*
+int main define identity might chanhe depent on operation
+bitset<100> identity;
+identity.reset();
+SparseTable2D<bitset<100> > sparse(grid, identity);
+*/
