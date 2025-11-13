@@ -1,32 +1,19 @@
-vector<vector<int>> build(vector<int>v,int n)
-{
-
-    vector<vector<ll>>sparse(n,vector<ll>(log2(n)+1));
-    for(int i=0;i<n;i++)
-    {
-        sparse[i][0]=i;
+vector<vector<int> > build(vector<int> &v,int n) {
+    vector<vector<ll> > sparse(n, vector<ll>(log2(n) + 1));
+    for (int i = 0; i < n; i++) {
+        sparse[i][0] = v[i];
     }
-    for(int j=1;(1<<j)<=n;j++)
-    {
-        for(int i=0;i+(1<<j)-1<n;i++)
-        {
-
-            if(v[sparse[i][j-1]]<v[sparse[i+(1<<(j-1))][j-1]]) {
-                sparse[i][j] = sparse[i][j - 1];
-
-            }
-            else {
-                sparse[i][j] = sparse[i + (1 << (j - 1))][j - 1];
-            }
+    for (int j = 1; (1 << j) <= n; j++) {
+        for (int i = 0; i + (1 << j) - 1 < n; i++) {
+            sparse[i][j] = min(sparse[i + (1 << (j - 1))][j - 1], sparse[i][j - 1]);
         }
     }
 
     return sparse;
 }
-ll query(ll l,ll r,vector<vector<ll>>&sparse,vector<ll>&v)
-{
-    l--,r--;
-    ll len=r-l+1;
-    ll k= log2(len);
-    return (min(v[sparse[l][k]],v[sparse[l+len-(1<<k)][k]]));
+
+ll query(ll l,ll r, vector<vector<ll> > &sparse) {
+    ll len = r - l + 1;
+    ll k = log2(len);
+    return (min(sparse[l][k], sparse[l + len - (1 << k)][k]));
 }
