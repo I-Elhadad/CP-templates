@@ -1,0 +1,238 @@
+//    #pragma GCC optimize ("O3")
+//    #pragma GCC optimize ("unroll-loops")
+//    #pragma comment(linker, "/STACK:2000000")
+#include<bits/stdc++.h>
+
+using namespace std;
+#define int long long
+#define ld long double
+#define  ui unsigned int
+#define endl "\n"
+#define FOCUS ios_base::sync_with_stdio(0);cin.tie(0);cout.tie(0);
+
+void Go() {
+    ios_base::sync_with_stdio(false), cin.tie(nullptr), cout.tie(nullptr);
+#ifndef ONLINE_JUDGE
+    freopen("input.txt", "r", stdin);
+    freopen("output.txt", "w", stdout);
+#endif
+}
+
+struct Node {
+    int mxPre;
+    int mxSuf;
+    int best;
+    int sum;
+};
+
+Node merge(Node a, Node b) {
+    Node res;
+    res.mxPre = max(a.mxPre, a.sum + b.mxPre);
+    res.mxSuf = max(b.mxSuf, b.sum + a.mxSuf);
+    res.sum = a.sum + b.sum;
+    res.best = max({a.best, b.best, res.mxPre, res.mxSuf, a.mxSuf + b.mxPre});
+    return res;
+}
+
+const int isValueOnEdge = 0; // switch to 0 for value on node
+// For values on edge
+vector<vector<int> > treeEdgeIdx;
+vector<int> edge_to; // which end point used in directing the edge
+vector<int> edge_cost;
+const int N = 2e5;
+int SegN = 8e5;
+vector<Node> tree(SegN);
+vector<int> lazy(SegN, 2e9);
+vector<vector<int> > adj;
+vector<int> tin(N), tout(N);
+
+void assign(int pos,int val,int st,int en) {
+    tree[pos].sum = val * (en - st + 1);
+    tree[pos].mxSuf = tree[pos].mxPre = max(0ll, val * (en - st + 1));
+    tree[pos].best = max(0ll, tree[pos].sum);
+    lazy[pos] = val;
+}
+
+void propagate(int pos, int st, int en) {
+    if (st == en || lazy[pos] == 2e9)return;
+    int mid = (st + en) / 2;
+    assign(pos * 2 + 1, lazy[pos], st, mid);
+    assign(pos * 2 + 2, lazy[pos], mid + 1, en);
+    lazy[pos] = 2e9;
+}
+
+void add(int l, int r, int val, int pos, int st, int en) {
+    if (r < st || l > en)return;
+    propagate(pos, st, en);
+    if (st >= l && en <= r) {
+        assign(pos, val, st, en);
+        return;
+    }
+    int mid = (st + en) / 2;
+    add(l, r, val, pos * 2 + 1, st, mid);
+    add(l, r, val, pos * 2 + 2, mid + 1, en);
+    tree[pos] = merge(tree[pos * 2 + 1], tree[pos * 2 + 2]);
+}
+
+Node query(int l, int r, int pos, int st, int en) {
+    if (en < l || st > r)return {0,0,0,0};
+    propagate(pos, st, en);
+    if (st >= l && en <= r) {
+        return tree[pos];
+    }
+    int mid = (st + en) / 2;
+    return merge(query(l, r, pos * 2 + 1, st, mid), query(l, r, pos * 2 + 2, mid + 1, en));
+}
+
+int parent[N], depth[N], heavy[N], root[N], segTreePos[N];
+
+int dfsHld(int node) {
+    int size = 1;
+    int maxSubTree = 0;
+    for (int i = 0; i < adj[node].size(); i++) {
+        int child = adj[node][i];
+        if (child == parent[node])continue;
+        parent[child] = node;
+        depth[child] = depth[node] + 1;
+        int childSize = dfsHld(child);
+        if (childSize > maxSubTree) {
+            maxSubTree = childSize;
+            heavy[node] = child;
+        }
+        size += childSize;
+    }
+    return size;
+}
+
+void buildChains() {
+    int n = adj.size();
+    int pos = 0;
+    memset(heavy, -1, sizeof heavy);
+    parent[0] = -1;
+    dfsHld(0);
+    for (int i = 0; i < n; i++) {
+        if (parent[i] == -1 || heavy[parent[i]] != i) {
+            for (int j = i; j != -1; j = heavy[j]) {
+                root[j] = i, segTreePos[j] = pos++;
+            }
+        }
+    }
+}
+
+int n;
+
+Node queryChain(int l, int r) {
+    return query(l, r, 0, 0, n - 1);
+}
+
+void addChain(int l, int r, int val) {
+    add(l, r, val, 0, 0, n - 1);
+}
+
+int queryPath(int u, int v) {
+    Node queryRes1 = {0,0,0,0}; // accum from u-side (in order from u -> ... )
+    Node queryRes2 = {0,0,0,0}; // accum from v-side (will be placed after middle)
+
+    // climb while u and v are in different heavy chains
+    while (root[u] != root[v]) {
+        if (depth[root[u]] > depth[root[v]]) {
+            // take head[u] .. u (head -> ... -> u), but along path we need u -> ... -> head
+            Node cur = queryChain(segTreePos[root[u]], segTreePos[u]);
+            // reverse cur so it represents u -> ... -> head
+            swap(cur.mxPre, cur.mxSuf);
+            // append this piece after queryRes1 (preserving order)
+            queryRes1 = merge(queryRes1, cur);
+            u = parent[root[u]];
+        } else {
+            // take head[v] .. v (head -> ... -> v)
+            Node cur = queryChain(segTreePos[root[v]], segTreePos[v]);
+            // this piece should appear before existing queryRes2, so prepend:
+            queryRes2 = merge(cur, queryRes2);
+            v = parent[root[v]];
+        }
+    }
+
+    // now u and v are on the same chain
+    int pu = segTreePos[u];
+    int pv = segTreePos[v];
+
+    Node mid = {0,0,0,0};
+    if (pu <= pv) {
+        int l = pu + isValueOnEdge;
+        int r = pv;
+        if (l <= r) mid = queryChain(l, r);
+    } else {
+        // pu > pv : query pv .. pu then reverse to make it u -> ... -> v
+        int l = pv + isValueOnEdge;
+        int r = pu;
+        if (l <= r) {
+            mid = queryChain(l, r);
+            swap(mid.mxPre, mid.mxSuf); // reverse mid so it's u->...->v
+        }
+    }
+
+    Node total = merge( merge(queryRes1, mid), queryRes2 );
+    return total.best;
+}
+
+
+void addPath(int u, int v, int val) {
+    for (; root[u] != root[v]; v = parent[root[v]]) {
+        if (depth[root[u]] > depth[root[v]])
+            swap(u, v);
+        addChain(segTreePos[root[v]], segTreePos[v], val);
+    }
+    if (depth[u] > depth[v])
+        swap(u, v);
+    if (!isValueOnEdge || u != v) {
+        addChain(segTreePos[u] + isValueOnEdge, segTreePos[v], val);
+    }
+}
+
+
+void updatePos(int l,int r, int val) {
+    add(segTreePos[l], segTreePos[r], val, 0, 0, n - 1);
+}
+
+
+signed main() {
+    // Go();
+    FOCUS
+    cin >> n;
+    int q;
+    vector<int>vals(n);
+    for (int i=0;i<n;i++) {
+        cin>>vals[i];
+    }
+
+    adj = vector<vector<int> >(n);
+    for (int i = 0; i < n - 1; i++) {
+        int x, y;
+        cin >> x >> y;
+        x--, y--;
+        adj[x].push_back(y);
+        adj[y].push_back(x);
+    }
+    buildChains();
+
+    for (int i=0;i<n;i++) {
+        updatePos(i,i,vals[i]);
+    }
+
+    cin >> q;
+    while (q--) {
+        int type;
+        cin >> type;
+        int l, r;
+        cin >> l >> r;
+        l--;
+        r--;
+        if (type == 2) {
+            int c;
+            cin>>c;
+            addPath(l, r,c);
+        } else {
+            cout << queryPath(l, r) << endl;
+        }
+    }
+}

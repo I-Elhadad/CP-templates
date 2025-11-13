@@ -1,0 +1,96 @@
+const int isValueOnEdge = 0; // switch to 0 for value on node
+// For values on edge
+vector<vector<int> > treeEdgeIdx;
+vector<int> edge_to; // which end point used in directing the edge
+vector<int> edge_cost;
+const int N = 8e5;
+vector<int> tree(N);
+vector<vector<int> > adj(N);
+ 
+void assign(int idx,int val,int pos,int st,int en) {
+    if (idx < st || idx > en)return;
+    if (st == en) {
+        tree[pos] = val;
+        return;
+    }
+    int mid = (st + en) / 2;
+    assign(idx, val, pos * 2 + 1, st, mid);
+    assign(idx, val, pos * 2 + 2, mid + 1, en);
+    tree[pos]=tree[pos*2+1]+tree[pos*2+2];
+}
+ 
+int query(int l,int r,int pos,int st,int en) {
+    if (en < l || st > r)return 0;
+    if (st >= l && en <= r) {
+        return tree[pos];
+    }
+    int mid = (st + en)/2;
+    return query(l, r, pos * 2 + 1, st, mid) + query(l, r, pos * 2 + 2, mid + 1, en);
+}
+ 
+int parent[N], depth[N], heavy[N], root[N], segTreePos[N];
+int dfsHld(int node) {
+    int size = 1;
+    int maxSubTree = 0;
+    for (int i = 0; i < adj[node].size(); i++) {
+        int child = adj[node][i];
+        if (child == parent[node])continue;
+        parent[child] = node;
+        depth[child] = depth[node] + 1;
+        int childSize = dfsHld(child);
+        if (childSize > maxSubTree) {
+            maxSubTree = child;
+            heavy[node] = child;
+        }
+        size += childSize;
+    }
+    return size;
+}
+ 
+void buildChains() {
+    int n = adj.size();
+    memset(heavy, -1, sizeof heavy);
+    parent[0] = -1;
+    dfsHld(0);
+    int pos = 0;
+    for (int i = 0; i < n; i++) {
+        if (parent[i] == -1 || heavy[parent[i]] != i) {
+            for (int j = i; j != -1; j = heavy[j]) {
+                root[j] = i, segTreePos[j] = pos++;
+            }
+        }
+    }
+    // seg.inti(n);
+}
+int n;
+ 
+int queryChain(int l,int r) {
+ 
+    return query(l,r,0,0,n-1);
+}
+ 
+int queryPath(int u,int v) {
+    int queryRes = 0;
+    for (; root[u] != root[v]; v = parent[root[v]]) {
+        // cout<<u<<" "<<v<<endl;
+        if (depth[root[u]] > depth[root[v]])
+            swap(u, v);
+        queryRes += queryChain(segTreePos[root[v]], segTreePos[v]);
+    }
+ 
+    if (!isValueOnEdge || u != v) {
+        queryRes += queryChain(segTreePos[u] + isValueOnEdge, segTreePos[v]);
+    }
+    return queryRes;
+}
+ 
+ 
+void updatePos(int node,int val) {
+    assign(segTreePos[node], val, 0, 0, n - 1);
+}
+int main
+{
+   for (int i=0;i<n;i++) {
+        updatePos(i,vals[i]);
+    }
+}
